@@ -1,14 +1,15 @@
 """bhairava.agent.providers -- AI provider registry."""
 from __future__ import annotations
+
 from .base import AIProvider, ProviderError
 
 
 def default_providers() -> dict[str, type[AIProvider]]:
-    from .openai import OpenAIProvider
     from .anthropic import AnthropicProvider
+    from .compatible import CompatibleProvider
     from .google import GoogleProvider
     from .ollama import OllamaProvider
-    from .compatible import CompatibleProvider
+    from .openai import OpenAIProvider
     return {
         "openai": OpenAIProvider,
         "anthropic": AnthropicProvider,

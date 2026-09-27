@@ -1,12 +1,12 @@
 """bhairava.discovery.engine -- orchestrate discovery adapters."""
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from urllib.parse import urlparse
 
 from ..core.executor import ExecContext, ToolExecutor
 from ..exceptions import ScopeViolation
 from ..tools.registry import ToolRegistry
-
 
 DISCOVERY_ADAPTER_NAMES = ("httpx", "gau", "waybackurls")
 ACTIVE_ADAPTER_NAMES = ("ffuf", "linkfinder")

@@ -1,8 +1,15 @@
 """tests for finding state transitions."""
 import pytest
+
 from bhairava.findings.lifecycle import (
-    LifecycleError, can_transition, confirm, mark_duplicate, mark_reported,
-    promote_to_review, reject, transition,
+    LifecycleError,
+    can_transition,
+    confirm,
+    mark_duplicate,
+    mark_reported,
+    promote_to_review,
+    reject,
+    transition,
 )
 from bhairava.findings.models import Finding
 

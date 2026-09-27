@@ -1,9 +1,10 @@
 """tests/test_adapters.py -- adapter command and parser behaviour."""
 from __future__ import annotations
+
 from bhairava.core.executor import ExecContext, ExecResult
-from bhairava.tools.adapters.subfinder import SubfinderAdapter
 from bhairava.tools.adapters.httpx import HttpxAdapter
 from bhairava.tools.adapters.nuclei import NucleiAdapter
+from bhairava.tools.adapters.subfinder import SubfinderAdapter
 from bhairava.tools.registry import default_registry
 
 

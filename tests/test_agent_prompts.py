@@ -1,6 +1,9 @@
 """tests for prompt construction (injection defense)."""
 from bhairava.agent.prompts import (
-    SYSTEM_POLICY, analyze_finding_prompt, plan_prompt, summarize_prompt,
+    SYSTEM_POLICY,
+    analyze_finding_prompt,
+    plan_prompt,
+    summarize_prompt,
 )
 
 

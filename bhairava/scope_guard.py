@@ -4,6 +4,7 @@ Every active operation MUST call ScopeGuard.validate_target or
 validate_url before executing. Out-of-scope targets raise ScopeViolation.
 """
 from __future__ import annotations
+
 import ipaddress
 import re
 from dataclasses import dataclass, field
@@ -17,7 +18,6 @@ except ImportError:
     yaml = None
 
 from .exceptions import ConfigError, ScopeViolation
-
 
 _DOMAIN_RE = re.compile(r"^(\*\.)?([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$", re.I)
 

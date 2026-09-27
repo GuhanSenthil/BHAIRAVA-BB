@@ -1,8 +1,10 @@
 """linkfinder adapter -- extract endpoints from JavaScript."""
 from __future__ import annotations
+
 import re
-from ..base import ToolAdapter
+
 from ...core.executor import ExecContext, ExecResult
+from ..base import ToolAdapter
 
 
 class LinkfinderAdapter(ToolAdapter):

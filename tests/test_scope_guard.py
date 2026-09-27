@@ -1,5 +1,6 @@
 """Negative tests: out-of-scope targets must be blocked."""
 import pytest
+
 from bhairava.exceptions import ScopeViolation
 from bhairava.scope_guard import Scope, ScopeGuard
 

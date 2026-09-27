@@ -1,12 +1,12 @@
 """bhairava.detection.engine -- run Nuclei against scoped endpoints."""
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 
 from ..core.executor import ExecContext, ToolExecutor
 from ..exceptions import ScopeViolation
 from ..findings.models import Finding
 from ..tools.registry import ToolRegistry
-
 
 DEFAULT_SEVERITIES = ("info", "low", "medium", "high", "critical")
 

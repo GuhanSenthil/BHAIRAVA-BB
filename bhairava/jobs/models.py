@@ -1,10 +1,10 @@
 """bhairava.jobs.models -- Job dataclass and states."""
 from __future__ import annotations
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+
 import json
 import uuid
-
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 
 JOB_STATUSES = ("CREATED", "RUNNING", "PAUSED", "FAILED", "COMPLETED", "CANCELLED")
 

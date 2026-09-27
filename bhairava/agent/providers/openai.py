@@ -1,9 +1,10 @@
 """bhairava.agent.providers.openai -- OpenAI chat completions."""
 from __future__ import annotations
+
 import json
 import urllib.request
-from .base import AIProvider, ProviderError
 
+from .base import AIProvider, ProviderError
 
 DEFAULT_ENDPOINT = "https://api.openai.com/v1/chat/completions"
 DEFAULT_MODEL = "gpt-4o-mini"

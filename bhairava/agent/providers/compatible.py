@@ -4,9 +4,11 @@ Use for Groq, Together, Fireworks, vLLM, LM Studio, OpenRouter, etc.
 Set endpoint + api_key_env + model in config.
 """
 from __future__ import annotations
+
 import json
 import os
 import urllib.request
+
 from .base import AIProvider, ProviderError
 
 

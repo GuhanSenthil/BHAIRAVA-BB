@@ -1,8 +1,9 @@
 """bhairava.reporting.markdown -- markdown report renderer."""
 from __future__ import annotations
-from datetime import datetime, timezone
-from ..findings.models import Finding
 
+from datetime import datetime, timezone
+
+from ..findings.models import Finding
 
 _SEV_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
 

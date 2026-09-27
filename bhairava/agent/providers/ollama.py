@@ -1,9 +1,10 @@
 """bhairava.agent.providers.ollama -- local Ollama /api/chat."""
 from __future__ import annotations
+
 import json
 import urllib.request
-from .base import AIProvider, ProviderError
 
+from .base import AIProvider, ProviderError
 
 DEFAULT_ENDPOINT = "http://127.0.0.1:11434/api/chat"
 DEFAULT_MODEL = "llama3.2"

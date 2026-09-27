@@ -1,7 +1,8 @@
 """assetfinder adapter -- quick passive subdomain discovery."""
 from __future__ import annotations
-from ..base import ToolAdapter
+
 from ...core.executor import ExecContext, ExecResult
+from ..base import ToolAdapter
 
 
 class AssetfinderAdapter(ToolAdapter):

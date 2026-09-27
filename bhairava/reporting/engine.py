@@ -1,12 +1,12 @@
 """bhairava.reporting.engine -- orchestrate report generation."""
 from __future__ import annotations
+
 from pathlib import Path
 
 from ..findings.models import Finding
-from . import markdown as md
-from . import json_report as js
 from . import html as html_mod
-
+from . import json_report as js
+from . import markdown as md
 
 FORMATS = ("markdown", "json", "html")
 

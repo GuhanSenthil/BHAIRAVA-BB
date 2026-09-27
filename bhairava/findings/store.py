@@ -1,7 +1,9 @@
 """bhairava.findings.store -- simple in-memory + JSON persistence."""
 from __future__ import annotations
+
 import json
 from pathlib import Path
+
 from .models import Finding
 
 

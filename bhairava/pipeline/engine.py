@@ -1,5 +1,6 @@
 """bhairava.pipeline.engine -- orchestrate scope -> recon -> discovery -> detection -> evidence -> report."""
 from __future__ import annotations
+
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -12,7 +13,7 @@ from ..findings.correlation import correlate, merge_group
 from ..findings.dedup import dedupe
 from ..findings.models import Finding
 from ..jobs.manager import JobManager
-from ..jobs.models import Job, PIPELINE_STAGES
+from ..jobs.models import PIPELINE_STAGES, Job
 from ..recon.engine import ReconEngine
 from ..reporting.engine import write_report
 from ..scope_guard import ScopeGuard

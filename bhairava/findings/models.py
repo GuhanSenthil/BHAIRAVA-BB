@@ -1,11 +1,11 @@
 """bhairava.findings.models -- canonical Finding model."""
 from __future__ import annotations
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, timezone
-from typing import Any
+
 import hashlib
 import uuid
-
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+from typing import Any
 
 SEVERITIES = ("info", "low", "medium", "high", "critical")
 

@@ -1,8 +1,8 @@
 """bhairava.evidence.sanitizer -- redact secrets from evidence."""
 from __future__ import annotations
+
 import re
 from typing import Any
-
 
 REDACTED = "***REDACTED***"
 

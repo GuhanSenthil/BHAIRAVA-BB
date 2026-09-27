@@ -1,5 +1,6 @@
 """bhairava.tools.registry -- discoverable adapter registry."""
 from __future__ import annotations
+
 from .base import ToolAdapter
 
 

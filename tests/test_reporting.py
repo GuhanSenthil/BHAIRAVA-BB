@@ -1,12 +1,11 @@
 """tests for report generation."""
 import json
-from pathlib import Path
 
 from bhairava.findings.models import Finding
-from bhairava.reporting.engine import write_report
-from bhairava.reporting import markdown as md
-from bhairava.reporting import json_report as js
 from bhairava.reporting import html as html_mod
+from bhairava.reporting import json_report as js
+from bhairava.reporting import markdown as md
+from bhairava.reporting.engine import write_report
 
 
 def _findings():

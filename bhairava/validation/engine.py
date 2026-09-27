@@ -1,5 +1,6 @@
 """bhairava.validation.engine -- controlled validation of findings."""
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 
 from ..core.executor import ExecContext, ToolExecutor
@@ -8,7 +9,6 @@ from ..findings.lifecycle import confirm, reject
 from ..findings.models import Finding
 from ..tools.registry import ToolRegistry
 from .approval import require_approval
-
 
 VALIDATORS = {
     "dalfox": {"xss"},

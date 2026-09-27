@@ -1,6 +1,10 @@
 """tests for evidence sanitization."""
 from bhairava.evidence.sanitizer import (
-    REDACTED, redact_value, sanitize, sanitize_headers, sanitize_text,
+    REDACTED,
+    redact_value,
+    sanitize,
+    sanitize_headers,
+    sanitize_text,
 )
 
 

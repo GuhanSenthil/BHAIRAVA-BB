@@ -1,5 +1,6 @@
 """bhairava.utils.tools -- External tool discovery."""
 from __future__ import annotations
+
 import shutil
 
 TOOLS = {

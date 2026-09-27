@@ -1,8 +1,10 @@
 """dalfox adapter -- XSS validation."""
 from __future__ import annotations
+
 import json as _json
-from ..base import ToolAdapter
+
 from ...core.executor import ExecContext, ExecResult
+from ..base import ToolAdapter
 
 
 class DalfoxAdapter(ToolAdapter):

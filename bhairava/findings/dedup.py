@@ -1,7 +1,7 @@
 """bhairava.findings.dedup -- merge duplicate findings."""
 from __future__ import annotations
-from .models import Finding
 
+from .models import Finding
 
 _SEVERITY_RANK = {
     "info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4,

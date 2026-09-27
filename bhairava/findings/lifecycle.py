@@ -1,7 +1,7 @@
 """bhairava.findings.lifecycle -- state machine for findings."""
 from __future__ import annotations
-from .models import Finding
 
+from .models import Finding
 
 # Allowed transitions
 _TRANSITIONS: dict[str, set[str]] = {

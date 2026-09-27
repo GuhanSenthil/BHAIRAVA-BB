@@ -11,8 +11,8 @@ AI cannot:
   - execute shell commands
 """
 from __future__ import annotations
-from dataclasses import dataclass, field
 
+from dataclasses import dataclass, field
 
 ALLOWED_MODULES = {"recon", "discover", "scan", "validate", "report"}
 ALLOWED_TOOLS = {

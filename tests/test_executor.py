@@ -1,11 +1,12 @@
 """tests/test_executor.py -- executor safety and adapter parsing."""
 from __future__ import annotations
+
 import subprocess
 from unittest import mock
 
 import pytest
 
-from bhairava.core.executor import ExecContext, ExecResult, ToolExecutor
+from bhairava.core.executor import ExecContext, ToolExecutor
 from bhairava.core.rate_limiter import RateLimiter
 from bhairava.scope_guard import Scope, ScopeGuard
 from bhairava.tools.base import ToolAdapter
@@ -20,7 +21,7 @@ class FakeAdapter(ToolAdapter):
         return ["fake-bin", "run", ctx.target]
 
     def parse_output(self, result):
-        return [{"line": l} for l in (result.stdout or "").splitlines() if l.strip()]
+        return [{"line": line_item} for line_item in (result.stdout or "").splitlines() if line_item.strip()]
 
 
 @pytest.fixture

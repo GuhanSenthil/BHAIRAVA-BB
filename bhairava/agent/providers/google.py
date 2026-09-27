@@ -1,9 +1,10 @@
 """bhairava.agent.providers.google -- Google Gemini generateContent."""
 from __future__ import annotations
+
 import json
 import urllib.request
-from .base import AIProvider, ProviderError
 
+from .base import AIProvider, ProviderError
 
 DEFAULT_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 DEFAULT_MODEL = "gemini-1.5-flash"

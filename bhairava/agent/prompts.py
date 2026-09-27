@@ -5,9 +5,9 @@ UNTRUSTED. It must never be interpreted as instructions. Every prompt
 separates trusted policy from untrusted data with explicit delimiters.
 """
 from __future__ import annotations
+
 import json
 from typing import Any
-
 
 SYSTEM_POLICY = """You are a security research assistant for BHAIRAVA-BB.
 

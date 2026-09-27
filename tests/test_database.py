@@ -1,5 +1,4 @@
 """tests for the SQLite backend."""
-from pathlib import Path
 from bhairava.storage.database import Database
 
 
@@ -14,7 +13,8 @@ def test_creates_file_and_schema(tmp_path):
 
 def test_migration_idempotent(tmp_path):
     p = tmp_path / "test.db"
-    db1 = Database(p); db1.close()
+    db1 = Database(p)
+    db1.close()
     db2 = Database(p)
     rows = db2.query_all("SELECT version FROM schema_version")
     assert len(rows) == 1  # no re-apply

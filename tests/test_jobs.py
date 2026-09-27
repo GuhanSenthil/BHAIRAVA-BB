@@ -1,8 +1,7 @@
 """tests for job lifecycle."""
-from pathlib import Path
 
 from bhairava.jobs.manager import JobManager
-from bhairava.jobs.models import Job, JOB_STATUSES, new_job_id
+from bhairava.jobs.models import JOB_STATUSES, Job, new_job_id
 from bhairava.storage.database import Database
 
 

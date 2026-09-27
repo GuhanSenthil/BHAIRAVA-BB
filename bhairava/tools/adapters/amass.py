@@ -1,7 +1,8 @@
 """amass adapter -- active/passive subdomain enumeration."""
 from __future__ import annotations
-from ..base import ToolAdapter
+
 from ...core.executor import ExecContext, ExecResult
+from ..base import ToolAdapter
 
 
 class AmassAdapter(ToolAdapter):

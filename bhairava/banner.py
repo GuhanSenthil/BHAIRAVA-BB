@@ -1,6 +1,8 @@
 """bhairava.banner -- ASCII banner + colour helpers."""
 from __future__ import annotations
-import os, sys
+
+import os
+import sys
 
 BANNER = r"""
  ██████╗ ██╗  ██╗ █████╗ ██╗██████╗  █████╗ ██╗   ██╗ █████╗

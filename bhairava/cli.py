@@ -1,11 +1,12 @@
 """bhairava.cli -- Command-line entry point."""
 from __future__ import annotations
+
 import argparse
 import sys
 from pathlib import Path
 
 from . import __version__
-from .banner import print_banner, info, success, warn, error, blocked
+from .banner import blocked, error, info, print_banner, success, warn
 from .exceptions import BhairavaError, ConfigError, ScopeViolation
 from .scope_guard import ScopeGuard
 
@@ -219,7 +220,6 @@ def _cmd_validate(args) -> int:
 
 
 def _cmd_report(args) -> int:
-    from pathlib import Path as _P
     from .findings.store import FindingStore
     from .reporting.engine import write_report
 
@@ -242,6 +242,7 @@ def _cmd_report(args) -> int:
 def _load_ai_cfg(args):
     """Load AI section of config.yaml."""
     from pathlib import Path as _P
+
     import yaml
     cfg_path = _P(args.config)
     if not cfg_path.exists():

@@ -1,5 +1,6 @@
 """bhairava.storage.json_store -- simple JSON artifact store."""
 from __future__ import annotations
+
 import json
 from datetime import datetime, timezone
 from pathlib import Path

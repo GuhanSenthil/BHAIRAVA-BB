@@ -1,8 +1,6 @@
 """tests for analyzer schema validation."""
 from __future__ import annotations
 
-import pytest
-
 from bhairava.agent.analyzer import Analyzer
 from bhairava.findings.models import Finding
 

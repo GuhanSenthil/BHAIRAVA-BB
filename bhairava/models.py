@@ -1,10 +1,10 @@
 """bhairava.models -- Shared dataclasses."""
 from __future__ import annotations
-from dataclasses import dataclass, field, asdict
+
+import uuid
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any
-import uuid
-
 
 STATUSES = ("CANDIDATE", "NEEDS_REVIEW", "CONFIRMED", "DUPLICATE", "REJECTED", "REPORTED")
 

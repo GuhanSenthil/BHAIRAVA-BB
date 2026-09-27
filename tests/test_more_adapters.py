@@ -2,10 +2,10 @@
 from bhairava.core.executor import ExecContext, ExecResult
 from bhairava.tools.adapters.amass import AmassAdapter
 from bhairava.tools.adapters.assetfinder import AssetfinderAdapter
-from bhairava.tools.adapters.gau import GauAdapter
-from bhairava.tools.adapters.waybackurls import WaybackurlsAdapter
 from bhairava.tools.adapters.ffuf import FfufAdapter
+from bhairava.tools.adapters.gau import GauAdapter
 from bhairava.tools.adapters.linkfinder import LinkfinderAdapter
+from bhairava.tools.adapters.waybackurls import WaybackurlsAdapter
 
 
 def _res(tool, stdout):

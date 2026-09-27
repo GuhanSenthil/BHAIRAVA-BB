@@ -1,7 +1,9 @@
 """bhairava.reporting.json_report -- JSON report renderer."""
 from __future__ import annotations
+
 import json
 from datetime import datetime, timezone
+
 from ..findings.models import Finding
 
 

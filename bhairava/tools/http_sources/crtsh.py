@@ -1,8 +1,9 @@
 """crt.sh source -- certificate transparency log lookup."""
 from __future__ import annotations
+
 import json
-import urllib.request
 import urllib.parse
+import urllib.request
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:

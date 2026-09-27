@@ -1,9 +1,10 @@
 """bhairava.reporting.html -- HTML report renderer."""
 from __future__ import annotations
+
 import html
 from datetime import datetime, timezone
-from ..findings.models import Finding
 
+from ..findings.models import Finding
 
 _SEV_COLOR = {
     "critical": "#b30000", "high": "#d9534f", "medium": "#f0ad4e",
