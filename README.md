@@ -1,5 +1,9 @@
-# BHAIRAVA-BB
-
+﻿# BHAIRAVA-BB
+[![Tests](https://github.com/GuhanSenthil/BHAIRAVA-BB/actions/workflows/tests.yml/badge.svg)](https://github.com/GuhanSenthil/BHAIRAVA-BB/actions/workflows/tests.yml)
+[![Lint](https://github.com/GuhanSenthil/BHAIRAVA-BB/actions/workflows/lint.yml/badge.svg)](https://github.com/GuhanSenthil/BHAIRAVA-BB/actions/workflows/lint.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+\n
 Authorized Bug Bounty Security Research Framework.
 
 Use only against targets you have explicit written authorization to test.
@@ -100,3 +104,13 @@ The suite includes explicit negative tests for:
 - AI policy engine rejecting shell metacharacters and unknown tools
 - job state machine rejecting illegal transitions
 - pipeline dry-run creating no files
+\n## Documentation
+
+- [Architecture](docs/architecture.md) — system architecture and data flow
+- [Scope Management](docs/scope-management.md) — authorization and scope configuration
+- [Troubleshooting](docs/troubleshooting.md) — common installation and runtime issues
+- [Security Policy](SECURITY.md) — security vulnerability reporting
+- [Contributing](CONTRIBUTING.md) — contribution workflow
+
+
+
