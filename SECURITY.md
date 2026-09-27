@@ -1,68 +1,176 @@
-## Scope & Authorization Disclaimer
+# Scope, Authorization, Notice & Testing Rules
 
-**BHAIRAVA-BB is intended exclusively for authorized security research, bug-bounty testing, penetration testing, and defensive security assessment.**
+## 1. Explicit Authorization and Consent Required
 
-You must have **explicit authorization** from the owner or authorized operator of every target before performing active security testing against it.
+**BHAIRAVA-BB must only be used against systems for which the operator has explicit authorization to perform the intended security activity.**
 
-### Authorized Use
+Before conducting any testing, the operator must establish that:
 
-Use BHAIRAVA-BB only when you have:
+1. The target owner or authorized program has granted permission.
+2. The intended target is explicitly within the authorized scope.
+3. The intended testing technique is permitted.
+4. Applicable rate limits and testing restrictions are understood.
+5. Any required notification, consent, or rules-of-engagement requirements have been satisfied.
 
-- Explicit permission to test the target; or
-- A valid bug-bounty/security-testing program that explicitly authorizes your intended activity; or
-- Ownership or administrative authorization for the systems being tested.
+A publicly accessible domain, IP address, API, application, service, or device **does not constitute authorization**.
 
-Always read and follow the target program's:
+### Notice and Consent
 
-- Scope definition
-- Out-of-scope assets
-- Testing restrictions
-- Rate limits
-- Prohibited techniques
-- Vulnerability disclosure requirements
+Where the target owner, security program, organization, contract, or rules of engagement require advance notice or consent, **that notice and consent must be obtained before testing begins**.
+
+The operator should retain appropriate evidence of authorization, such as:
+
+- Bug-bounty program rules and scope
+- Written authorization
 - Rules of engagement
+- Testing authorization emails
+- Contractual authorization
+- Internal security-testing approval
 
-### Scope Enforcement
+Do not assume authorization from silence, accessibility, ownership of a related domain, or authorization for a different asset.
 
-BHAIRAVA-BB's **Scope Guard is a mandatory authorization boundary**.
+**BHAIRAVA-BB does not provide, create, or infer authorization. The operator must establish authorization independently.**
 
-Targets outside the configured scope must not be tested. Excluded domains, URLs, hosts, and other explicitly prohibited targets must remain blocked.
+---
 
-**Do not bypass, weaken, disable, or circumvent Scope Guard to test an unauthorized target.**
+## 2. Passive Testing
 
-### User Responsibility
+Passive activities generally avoid intentionally sending security-testing traffic to the target infrastructure.
 
-The operator is solely responsible for ensuring that every security-testing activity performed with BHAIRAVA-BB is lawful and authorized.
+Examples may include:
 
-BHAIRAVA-BB does not grant permission to test any system, network, application, domain, device, or service.
+- Reviewing publicly available information
+- Reviewing public DNS records
+- Certificate-transparency research
+- Reviewing publicly available historical URLs
+- Analyzing previously collected datasets
+- Local analysis of downloaded or provided artifacts
+- Reviewing public documentation and metadata
 
-The existence of a public-facing target, IP address, domain, API, or vulnerability does **not** by itself constitute authorization to test it.
+Even passive reconnaissance must respect:
 
-### Prohibited Use
+- Applicable law
+- Terms of service
+- Bug-bounty rules
+- Privacy requirements
+- Program-specific restrictions
+- Restrictions on automated collection
 
-Do not use BHAIRAVA-BB to:
+**Passive does not automatically mean authorized.** If a program prohibits a particular information source or collection technique, that restriction must be followed.
 
-- Access systems without authorization
-- Conduct unauthorized vulnerability scanning
-- Circumvent authentication or access controls without permission
-- Exfiltrate or misuse data
-- Disrupt, degrade, or damage services
-- Conduct destructive testing outside an explicitly authorized scope
-- Attack third-party infrastructure because it is reachable through an authorized target
-- Bypass a bug-bounty program's restrictions or security controls
+---
 
-### Bug-Bounty Programs
+## 3. Active Testing
 
-Participation in a bug-bounty program does not automatically authorize every testing technique.
+Active testing intentionally interacts with the target or its infrastructure.
 
-Authorization is limited by the specific program's published rules and scope. If a technique, asset, endpoint, vulnerability class, or testing method is unclear, **do not perform the activity until authorization has been established.**
+Examples include:
 
-### Important Notice
+- HTTP requests generated for vulnerability discovery
+- Port or service probing
+- Automated endpoint fuzzing
+- Parameter testing
+- Vulnerability scanning
+- Nuclei scanning
+- Dalfox testing
+- SQL injection testing
+- Authentication testing
+- Access-control testing
+- Any validation that intentionally sends security-testing payloads
 
-**BHAIRAVA-BB is a security research framework, not an authorization mechanism.**
+**Active testing requires explicit authorization for the target and the intended testing activity.**
 
-The operator must establish authorization **before** running active security operations.
+Before active testing, verify:
 
-By using BHAIRAVA-BB for active testing, you acknowledge that you are responsible for complying with applicable laws, contracts, program rules, and organizational policies.
+```text
+Authorization
+    ↓
+Target in Scope
+    ↓
+Technique Permitted
+    ↓
+Rate Limits Confirmed
+    ↓
+Excluded Assets Confirmed
+    ↓
+Scope Guard Validation
+    ↓
+Active Testing
+```
 
-**Use responsibly. Test only what you are authorized to test.**
+If any required authorization or scope condition is missing, **do not perform the active test**.
+
+---
+
+## 4. Higher-Impact Testing
+
+Testing that could affect availability, data integrity, confidentiality, accounts, or production systems requires additional explicit authorization where applicable.
+
+Examples include:
+
+- Destructive payloads
+- Denial-of-service testing
+- Resource-exhaustion testing
+- Data modification
+- Data deletion
+- Credential attacks
+- Account lockout testing
+- Exploit chains that may alter system state
+- Actions involving real user data
+- Actions that could disrupt production services
+
+These activities must not be performed merely because the target is within a general bug-bounty scope.
+
+**A target being in scope does not automatically mean every testing technique is authorized.**
+
+---
+
+## 5. Scope Guard Requirement
+
+BHAIRAVA-BB's **Scope Guard is a mandatory security boundary**.
+
+Every active operation must pass scope validation before the external tool or network operation is executed.
+
+The framework must respect:
+
+- Authorized domains
+- Authorized URLs
+- Authorized hosts
+- Explicit exclusions
+- Program-specific restrictions
+- Configured rate limits
+- Configured concurrency limits
+
+Out-of-scope targets must be blocked.
+
+**Operators must never bypass, disable, or weaken Scope Guard to conduct testing.**
+
+---
+
+## 6. Operator Responsibility
+
+The operator is responsible for:
+
+- Obtaining authorization
+- Confirming consent or required notice
+- Understanding the rules of engagement
+- Configuring the correct scope
+- Respecting exclusions
+- Respecting rate limits
+- Selecting only permitted testing techniques
+- Protecting collected information
+- Reporting vulnerabilities according to the applicable program rules
+
+BHAIRAVA-BB is a security research framework. **It is not an authorization mechanism and does not grant permission to test any target.**
+
+### Final Notice
+
+> **USE BHAIRAVA-BB ONLY ON TARGETS YOU ARE AUTHORIZED TO TEST.**
+>
+> **OBTAIN REQUIRED NOTICE AND CONSENT BEFORE ACTIVE TESTING.**
+>
+> **PASSIVE RESEARCH MUST STILL COMPLY WITH APPLICABLE RULES.**
+>
+> **ACTIVE TESTING REQUIRES EXPLICIT AUTHORIZATION FOR THE TARGET AND INTENDED TECHNIQUE.**
+>
+> **WHEN AUTHORIZATION OR SCOPE IS UNCLEAR, DO NOT TEST.**
