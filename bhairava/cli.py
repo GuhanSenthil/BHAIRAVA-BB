@@ -249,6 +249,86 @@ def _cmd_report(args) -> int:
     return 0
 
 
+def _load_ai_cfg(args):
+    """Load AI section of config.yaml."""
+    from pathlib import Path as _P
+    import yaml
+    cfg_path = _P(args.config)
+    if not cfg_path.exists():
+        return {}
+    data = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+    return data.get("ai", {}) or {}
+
+
+def _cmd_agent_plan(args) -> int:
+    from .agent.planner import Planner
+    from .scope_guard import ScopeGuard
+
+    guard = ScopeGuard.from_yaml(args.scope)
+    ai_cfg = _load_ai_cfg(args)
+    if args.provider:
+        ai_cfg["provider"] = args.provider
+    if args.model:
+        ai_cfg["model"] = args.model
+
+    planner = Planner(ai_cfg, guard)
+    if not planner.available():
+        warn("AI provider not available; enable in config.yaml or pass --provider")
+        return 4
+
+    info(f"planning with {ai_cfg.get('provider')}/{ai_cfg.get('model')}")
+    result = planner.plan()
+    if result.error:
+        warn(f"planner error: {result.error}")
+    if result.rejected:
+        for r in result.rejected:
+            warn(f"  rejected: {r}")
+    if result.steps:
+        success(f"accepted {len(result.steps)} step(s):")
+        for s in result.steps:
+            print(f"  [{s['module']:<9}] {s['tool']:<12} {s['target']:<40} {s['reason']}")
+    else:
+        info("no actionable steps proposed")
+    return 0
+
+
+def _cmd_agent_analyze(args) -> int:
+    from .agent.analyzer import Analyzer
+    from .findings.store import FindingStore
+
+    store = FindingStore(args.input)
+    store.load()
+    findings = store.all()
+    if not findings:
+        warn(f"no findings in {args.input}")
+        return 1
+
+    ai_cfg = _load_ai_cfg(args)
+    if args.provider:
+        ai_cfg["provider"] = args.provider
+    if args.model:
+        ai_cfg["model"] = args.model
+
+    analyzer = Analyzer(ai_cfg)
+    if not analyzer.available():
+        warn("AI provider not available; enable in config.yaml or pass --provider")
+        return 4
+
+    info(f"analyzing {len(findings)} finding(s)")
+    results = analyzer.analyze_many(findings)
+    for r in results:
+        if r.analysis:
+            print(f"\n[{r.finding_id}]")
+            print(f"  severity: {r.analysis['severity_assessment']}")
+            print(f"  confidence: {r.analysis['confidence_adjust']:.2f}")
+            print(f"  summary: {r.analysis['summary']}")
+            for s in r.analysis['verification_steps']:
+                print(f"    - {s}")
+        elif r.error:
+            warn(f"[{r.finding_id}] {r.error}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="bhairava",
@@ -306,6 +386,22 @@ def build_parser() -> argparse.ArgumentParser:
     sp_scan.add_argument("--timeout", type=int, default=600)
     sp_scan.add_argument("--data-dir", default="data")
     sp_scan.set_defaults(func=_cmd_scan)
+
+    sp_agent = sub.add_parser("agent", help="AI-assisted planning and analysis")
+    agent_sub = sp_agent.add_subparsers(dest="agent_cmd")
+
+    ap = agent_sub.add_parser("plan", help="AI-suggested next steps (policy-checked)")
+    ap.add_argument("--provider", default="")
+    ap.add_argument("--model", default="")
+    ap.add_argument("--config", default="config/config.yaml")
+    ap.set_defaults(func=_cmd_agent_plan)
+
+    aa = agent_sub.add_parser("analyze", help="AI analysis of findings")
+    aa.add_argument("--input", required=True, help="Path to findings JSON")
+    aa.add_argument("--provider", default="")
+    aa.add_argument("--model", default="")
+    aa.add_argument("--config", default="config/config.yaml")
+    aa.set_defaults(func=_cmd_agent_analyze)
 
     sp_recon = sub.add_parser("recon", help="Subdomain and asset reconnaissance")
     sp_recon.add_argument("--target", required=True)

@@ -1,0 +1,25 @@
+# BHAIRAVA-BB configuration
+# Copy from config.example.yaml and edit for your program.
+
+ai:
+  # AI is DISABLED by default. Turn on explicitly.
+  enabled: false
+
+  # provider: openai | anthropic | google | gemini | ollama | compatible
+  provider: ollama
+  model: "llama3.2"
+  endpoint: ""
+  timeout: 60
+
+  # For cloud providers, name of env var holding the API key.
+  # Do NOT put keys in this file.
+  api_key_env: ""
+
+# Per-phase enable flags
+pipeline:
+  recon: true
+  discovery: true
+  detection: true
+  validation: false
+  evidence: true
+  reporting: true
