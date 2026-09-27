@@ -38,3 +38,65 @@ targets are blocked before any network testing begins.
 ## License
 
 MIT. See LICENSE.
+
+## Safety guarantees
+
+BHAIRAVA-BB enforces the following guarantees across the whole pipeline.
+Each guarantee is covered by automated tests.
+
+### Phase F -- pipeline, jobs, and storage
+
+- **Every pipeline stage routes through ScopeGuard.** The pipeline inherits
+  the same executor that rate-limits and scope-checks each tool invocation.
+  An out-of-scope target is rejected before any tool runs.
+- **`--dry-run` writes nothing.** No database file, no report directory,
+  no network traffic. Running `bhairava pipeline --dry-run` against a real
+  scope produces only a printed summary.
+- **Job persistence contains no secrets.** Findings are stored as sanitized
+  JSON records. API keys, cookies, bearer tokens, and passwords never enter
+  the SQLite database.
+- **`--resume` skips completed stages.** A resumed job re-runs only the
+  stages not yet marked complete. No duplicate scans, no duplicate findings.
+- **Job IDs are unique and time-ordered.** Format:
+  `JOB-YYYYMMDD-HHMMSS-<hex>`. `jobs list` returns the newest first.
+- **Cancellation is terminal.** A cancelled job cannot be resumed
+  accidentally; `jobs cancel` writes the terminal state once.
+- **Deletion removes all related rows atomically.** `jobs delete` removes
+  the job row, its findings, its evidence, and its tool-run history in a
+  single transaction, in that order, to respect foreign-key relationships.
+
+### Inherited guarantees (from earlier phases)
+
+- **Executor:** every subprocess call uses argument arrays with no
+  `shell=True`, enforces a timeout, caps stdout/stderr size, and passes a
+  minimal environment allowlist.
+- **Adapter registry:** unknown tools are skipped, not fatal. A missing
+  adapter never crashes the CLI.
+- **Detection:** every Nuclei match is re-validated against ScopeGuard
+  before being stored as a finding.
+- **Validation:** sqlmap runs only with `--batch --smart --level=1 --risk=1`.
+  Flags like `--os-shell`, `--file-read`, `--dump`, `--sql-shell` are
+  blocked at command-construction time.
+- **Evidence:** sanitizer strips bearer tokens, OpenAI/Anthropic/GitHub/
+  Groq/Gemini keys, cookies, `Authorization`, and private keys before
+  any record is written.
+- **AI layer:** disabled by default. When enabled, all target content is
+  wrapped in an untrusted-data block and explicitly labelled as data.
+  AI cannot expand scope, disable rate limits, or execute commands -- every
+  proposed step is re-validated through the policy engine and ScopeGuard.
+- **Reporting:** reports never contain secrets. Sanitization happens at
+  collection time, not at render time.
+
+### Automated test coverage
+
+    pytest -q
+    # 124 passed
+
+The suite includes explicit negative tests for:
+
+- out-of-scope targets blocked at every entry point
+- ScopeGuard wildcard and exclusion behaviour
+- sqlmap forbidden-flag rejection
+- AI policy engine rejecting shell metacharacters and unknown tools
+- job state machine rejecting illegal transitions
+- pipeline dry-run creating no files
