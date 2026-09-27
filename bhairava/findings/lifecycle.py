@@ -47,8 +47,12 @@ def confirm(f: Finding) -> None:
 
 
 def reject(f: Finding) -> None:
-    if f.status in ("CANDIDATE", "NEEDS_REVIEW"):
-        transition(f, "REJECTED")
+    """Move finding to REJECTED.
+
+    Raises LifecycleError if the current state does not allow rejection
+    (e.g. already REJECTED, DUPLICATE, or REPORTED).
+    """
+    transition(f, "REJECTED")
 
 
 def mark_duplicate(f: Finding) -> None:
