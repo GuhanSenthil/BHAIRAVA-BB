@@ -1,0 +1,2 @@
+"""BHAIRAVA-BB -- Authorized Bug Bounty Security Research Framework."""
+__version__ = "1.0.0"

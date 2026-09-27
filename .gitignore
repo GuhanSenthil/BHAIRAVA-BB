@@ -1,0 +1,37 @@
+# Secrets
+.env
+.env.local
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
+
+# Scan artifacts
+data/raw/
+data/processed/
+data/evidence/
+results/
+*.log
+
+# Scope files -- commit only the .example version
+config/scope.yaml
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+Thumbs.db

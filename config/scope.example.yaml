@@ -1,0 +1,17 @@
+# BHAIRAVA-BB -- example scope file.
+# Copy to config/scope.yaml and replace with your AUTHORIZED target.
+
+program:
+  name: "Authorized Example Program"
+
+scope:
+  domains:
+    - "*.example.com"
+  urls:
+    - "https://example.com"
+  excluded:
+    - "admin.example.com"
+
+limits:
+  requests_per_second: 5
+  max_concurrency: 3
