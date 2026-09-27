@@ -143,6 +143,58 @@ def _cmd_discover(args) -> int:
     return 0
 
 
+def _cmd_scan(args) -> int:
+    from .core.executor import ToolExecutor
+    from .core.rate_limiter import RateLimiter
+    from .detection.engine import DetectionEngine
+    from .findings.correlation import correlate, merge_group
+    from .findings.dedup import dedupe
+    from .findings.store import FindingStore
+    from .scope_guard import ScopeGuard
+    from .tools.registry import default_registry
+
+    guard = ScopeGuard.from_yaml(args.scope)
+    rl = RateLimiter(guard.scope.requests_per_second)
+    executor = ToolExecutor(guard, rate_limiter=rl)
+    engine = DetectionEngine(executor, default_registry(), guard)
+
+    sev = tuple(s.strip().lower() for s in args.severity.split(",")) if args.severity else None
+
+    info(f"scanning {args.target}")
+    result = engine.run(
+        target=args.target,
+        severities=sev or ("info", "low", "medium", "high", "critical"),
+        timeout=args.timeout,
+    )
+    success(f"raw detections: {result.raw_count}")
+    info(f"scoped findings: {len(result.findings)}")
+    for skip in result.skipped:
+        warn(f"  skipped {skip}")
+    for err in result.errors:
+        warn(f"  error: {err}")
+
+    # Correlate -> merge -> dedupe
+    groups = correlate(result.findings)
+    merged = [merge_group(g) for g in groups]
+    final = dedupe(merged)
+
+    success(f"correlated findings: {len(final)}")
+
+    store = FindingStore(Path(args.data_dir) / "findings" / "latest.json")
+    store.add_many(final)
+    saved = store.save()
+    if saved:
+        success(f"saved: {saved}")
+
+    # Print summary
+    if final:
+        print()
+        info("FINDINGS")
+        for f in sorted(final, key=lambda x: x.severity, reverse=True):
+            print(f"  [{f.severity.upper():<8}] {f.title}  <{f.status}>  {f.url}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="bhairava",
@@ -173,6 +225,14 @@ def build_parser() -> argparse.ArgumentParser:
     sp_cfg_sub = sp_cfg.add_subparsers(dest="cfg_cmd")
     cv = sp_cfg_sub.add_parser("validate", help="Validate scope YAML")
     cv.set_defaults(func=_cmd_config_validate)
+
+    sp_scan = sub.add_parser("scan", help="Vulnerability detection via Nuclei")
+    sp_scan.add_argument("--target", required=True)
+    sp_scan.add_argument("--severity", default="",
+                         help="Comma-separated severities (default: all)")
+    sp_scan.add_argument("--timeout", type=int, default=600)
+    sp_scan.add_argument("--data-dir", default="data")
+    sp_scan.set_defaults(func=_cmd_scan)
 
     sp_recon = sub.add_parser("recon", help="Subdomain and asset reconnaissance")
     sp_recon.add_argument("--target", required=True)
