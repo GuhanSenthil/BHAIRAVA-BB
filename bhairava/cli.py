@@ -65,17 +65,7 @@ def _cmd_config_validate(args) -> int:
 
 
 def _cmd_pipeline(args) -> int:
-    guard = ScopeGuard.from_yaml(args.scope)
-    if args.dry_run:
-        print_banner(__version__, show_help_hint=False)
-        info("DRY RUN -- no network testing will be performed")
-        info(f"program: {guard.scope.name}")
-        info(f"domains: {guard.scope.domains}")
-        info(f"urls   : {guard.scope.urls}")
-        info("planned modules: recon, discover, scan, evidence, report")
-        return 0
-    warn("non-dry-run pipeline not implemented yet (Phase 2)")
-    return 0
+    return _cmd_pipeline_real(args)
 
 
 def _cmd_recon(args) -> int:
@@ -329,6 +319,107 @@ def _cmd_agent_analyze(args) -> int:
     return 0
 
 
+def _cmd_jobs_list(args) -> int:
+    from .jobs.manager import JobManager
+    from .storage.database import Database
+    db = Database(Path(args.data_dir) / "bhairava.db")
+    jobs = JobManager(db).list(limit=args.limit)
+    if not jobs:
+        info("no jobs recorded")
+        return 0
+    print(f"{'Job ID':<36} {'Status':<12} {'Stage':<12} {'Started':<26}")
+    print("-" * 90)
+    for j in jobs:
+        print(f"{j.id:<36} {j.status:<12} {j.stage:<12} {j.started_at:<26}")
+    return 0
+
+
+def _cmd_jobs_show(args) -> int:
+    from .jobs.manager import JobManager
+    from .storage.database import Database
+    db = Database(Path(args.data_dir) / "bhairava.db")
+    job = JobManager(db).get(args.job_id)
+    if job is None:
+        error(f"job not found: {args.job_id}")
+        return 1
+    print(f"Job:      {job.id}")
+    print(f"Target:   {job.target}")
+    print(f"Status:   {job.status}")
+    print(f"Stage:    {job.stage}")
+    print(f"Started:  {job.started_at}")
+    print(f"Finished: {job.finished_at}")
+    print(f"Stages:   {', '.join(job.stages_run) or '(none)'}")
+    print(f"Stats:    {job.stats}")
+    if job.error:
+        print(f"Error:    {job.error}")
+    rows = db.query_all("SELECT id, data FROM findings WHERE job_id = ?", (job.id,))
+    print(f"Findings: {len(rows)}")
+    for r in rows[:10]:
+        import json as _j
+        d = _j.loads(r["data"])
+        print(f"  [{d.get('severity','?').upper():<8}] {d.get('title','?')}")
+    return 0
+
+
+def _cmd_jobs_cancel(args) -> int:
+    from .jobs.manager import JobManager
+    from .storage.database import Database
+    db = Database(Path(args.data_dir) / "bhairava.db")
+    mgr = JobManager(db)
+    job = mgr.get(args.job_id)
+    if job is None:
+        error(f"job not found: {args.job_id}")
+        return 1
+    job.cancel()
+    mgr.save(job)
+    success(f"cancelled {job.id}")
+    return 0
+
+
+def _cmd_jobs_delete(args) -> int:
+    from .jobs.manager import JobManager
+    from .storage.database import Database
+    db = Database(Path(args.data_dir) / "bhairava.db")
+    ok = JobManager(db).delete(args.job_id)
+    if ok:
+        success(f"deleted {args.job_id}")
+        return 0
+    error(f"job not found: {args.job_id}")
+    return 1
+
+
+def _cmd_pipeline_real(args) -> int:
+    from .pipeline.engine import Pipeline, PipelineConfig
+    if not args.dry_run:
+        pass
+    cfg = PipelineConfig(
+        scope_yaml=Path(args.scope),
+        data_dir=Path(getattr(args, "data_dir", "data")),
+        reports_dir=Path(getattr(args, "reports_dir", "reports")),
+        timeout=getattr(args, "timeout", 300),
+        dry_run=args.dry_run,
+        resume_job_id=getattr(args, "resume", "") or "",
+    )
+    pipe = Pipeline(cfg)
+    try:
+        result = pipe.run()
+    finally:
+        pipe.close()
+
+    if args.dry_run:
+        return 0
+
+    print()
+    success(f"job: {result.job.id}  status: {result.job.status}")
+    info(f"hosts: {result.recon_hosts}  endpoints: {result.endpoints}")
+    info(f"findings: raw={result.raw_findings} final={result.final_findings}")
+    for fmt, p in result.reports.items():
+        info(f"  report {fmt}: {p}")
+    for e in result.errors:
+        warn(f"  error: {e}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="bhairava",
@@ -417,9 +508,38 @@ def build_parser() -> argparse.ArgumentParser:
     sp_disc.add_argument("--data-dir", default="data")
     sp_disc.set_defaults(func=_cmd_discover)
 
-    sp_pipe = sub.add_parser("pipeline", help="Run authorized workflow")
-    sp_pipe.add_argument("--dry-run", action="store_true")
+    sp_pipe = sub.add_parser("pipeline", help="Run the full authorized workflow")
+    sp_pipe.add_argument("--dry-run", action="store_true",
+                         help="Show planned stages without executing")
+    sp_pipe.add_argument("--resume", default="",
+                         help="Resume a previous job by id")
+    sp_pipe.add_argument("--data-dir", default="data")
+    sp_pipe.add_argument("--reports-dir", default="reports")
+    sp_pipe.add_argument("--timeout", type=int, default=300)
     sp_pipe.set_defaults(func=_cmd_pipeline)
+
+    sp_jobs = sub.add_parser("jobs", help="Manage and inspect jobs")
+    jobs_sub = sp_jobs.add_subparsers(dest="jobs_cmd")
+
+    jl = jobs_sub.add_parser("list", help="List recent jobs")
+    jl.add_argument("--limit", type=int, default=20)
+    jl.add_argument("--data-dir", default="data")
+    jl.set_defaults(func=_cmd_jobs_list)
+
+    js = jobs_sub.add_parser("show", help="Show a job")
+    js.add_argument("job_id")
+    js.add_argument("--data-dir", default="data")
+    js.set_defaults(func=_cmd_jobs_show)
+
+    jc = jobs_sub.add_parser("cancel", help="Mark a job cancelled")
+    jc.add_argument("job_id")
+    jc.add_argument("--data-dir", default="data")
+    jc.set_defaults(func=_cmd_jobs_cancel)
+
+    jd = jobs_sub.add_parser("delete", help="Delete a job and its artifacts")
+    jd.add_argument("job_id")
+    jd.add_argument("--data-dir", default="data")
+    jd.set_defaults(func=_cmd_jobs_delete)
 
     return p
 
