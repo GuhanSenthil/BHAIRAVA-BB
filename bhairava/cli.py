@@ -72,33 +72,87 @@ def _cmd_pipeline(args) -> int:
 def _cmd_recon(args) -> int:
     from .core.executor import ToolExecutor
     from .core.rate_limiter import RateLimiter
+    from .jobs.manager import JobManager
     from .recon.engine import ReconEngine
     from .scope_guard import ScopeGuard
+    from .storage.database import Database
     from .storage.json_store import JsonStore
     from .tools.registry import default_registry
 
     guard = ScopeGuard.from_yaml(args.scope)
+    guard.validate_target(args.target)
+
     rl = RateLimiter(guard.scope.requests_per_second)
     executor = ToolExecutor(guard, rate_limiter=rl)
     engine = ReconEngine(executor, default_registry(), guard)
 
-    info(f"recon on {args.target}")
-    result = engine.run(args.target, timeout=args.timeout)
-    success(f"hosts: {len(result.hosts)}")
-    for src, n in result.sources.items():
-        info(f"  {src}: {n}")
-    for skip in result.skipped:
-        warn(f"  skipped {skip}")
-    for err in result.errors:
-        warn(f"  error: {err}")
+    with Database(args.data_dir + "/bhairava.db") as db:
+        jobs = JobManager(db)
+        job = jobs.create(args.target, args.scope)
+        job.start()
+        job.mark_stage("recon")
+        jobs.save(job)
 
-    store = JsonStore(args.data_dir)
-    path = store.save("recon", {"target": args.target,
-                                "hosts": result.hosts,
-                                "sources": result.sources,
-                                "errors": result.errors}, subdir="recon")
-    success(f"saved: {path}")
-    return 0
+        info(f"recon on {args.target}")
+        try:
+            result = engine.run(args.target, timeout=args.timeout)
+
+            store = JsonStore(args.data_dir)
+            path = store.save(
+                "recon",
+                {
+                    "target": args.target,
+                    "hosts": result.hosts,
+                    "sources": result.sources,
+                    "errors": result.errors,
+                },
+                subdir="recon",
+            )
+
+            job.stats = {
+                "hosts": len(result.hosts),
+                "sources": result.sources,
+                "errors": len(result.errors),
+                "skipped": len(result.skipped),
+                "artifact": str(path),
+            }
+
+            if result.errors:
+                job.fail("; ".join(result.errors))
+                jobs.save(job)
+
+                for src, n in result.sources.items():
+                    info(f"  {src}: {n}")
+                for skip in result.skipped:
+                    warn(f"  skipped {skip}")
+                for err in result.errors:
+                    warn(f"  error: {err}")
+
+                return 1
+
+            job.finish()
+            jobs.save(job)
+
+            success(f"hosts: {len(result.hosts)}")
+
+            for src, n in result.sources.items():
+                info(f"  {src}: {n}")
+            for skip in result.skipped:
+                warn(f"  skipped {skip}")
+
+            success(f"saved: {path}")
+            success(f"job: {job.id}  status: {job.status}")
+
+            return 0
+
+        except Exception as exc:
+            job.fail(str(exc))
+            jobs.save(job)
+
+            error(f"recon failed: {exc}")
+            error(f"job: {job.id}  status: {job.status}")
+
+            return 1
 
 
 def _cmd_discover(args) -> int:
