@@ -195,6 +195,60 @@ def _cmd_scan(args) -> int:
     return 0
 
 
+def _cmd_validate(args) -> int:
+    from .core.executor import ToolExecutor
+    from .core.rate_limiter import RateLimiter
+    from .findings.store import FindingStore
+    from .scope_guard import ScopeGuard
+    from .tools.registry import default_registry
+    from .validation.engine import ValidationEngine
+
+    store = FindingStore(args.input)
+    store.load()
+    findings = store.all()
+    if not findings:
+        warn(f"no findings in {args.input}")
+        return 1
+
+    guard = ScopeGuard.from_yaml(args.scope)
+    rl = RateLimiter(guard.scope.requests_per_second)
+    executor = ToolExecutor(guard, rate_limiter=rl)
+    engine = ValidationEngine(executor, default_registry(), guard,
+                              auto_approve=args.yes)
+
+    info(f"validating {len(findings)} finding(s)")
+    results = engine.validate_many(findings, timeout=args.timeout)
+    confirmed = sum(1 for r in results if r.validated)
+    rejected = sum(1 for r in results if r.rejected)
+    errors = sum(1 for r in results if r.error)
+    success(f"confirmed: {confirmed}  rejected: {rejected}  errors: {errors}")
+
+    store.save()
+    success(f"updated: {args.input}")
+    return 0
+
+
+def _cmd_report(args) -> int:
+    from pathlib import Path as _P
+    from .findings.store import FindingStore
+    from .reporting.engine import write_report
+
+    store = FindingStore(args.input)
+    store.load()
+    findings = store.all()
+    if not findings:
+        warn(f"no findings in {args.input}")
+        return 1
+
+    formats = tuple(f.strip() for f in args.format.split(","))
+    written = write_report(findings, args.output, target=args.target,
+                           program=args.program, formats=formats)
+    success(f"report on {len(findings)} finding(s):")
+    for fmt, path in written.items():
+        info(f"  {fmt}: {path}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="bhairava",
@@ -225,6 +279,25 @@ def build_parser() -> argparse.ArgumentParser:
     sp_cfg_sub = sp_cfg.add_subparsers(dest="cfg_cmd")
     cv = sp_cfg_sub.add_parser("validate", help="Validate scope YAML")
     cv.set_defaults(func=_cmd_config_validate)
+
+    sp_val = sub.add_parser("validate", help="Validate candidate findings")
+    sp_val.add_argument("--input", required=True,
+                        help="Path to findings JSON (from scan)")
+    sp_val.add_argument("--timeout", type=int, default=300)
+    sp_val.add_argument("--yes", action="store_true",
+                        help="Auto-approve impactful validators (sqlmap)")
+    sp_val.set_defaults(func=_cmd_validate)
+
+    sp_rep = sub.add_parser("report", help="Generate reports from findings")
+    sp_rep.add_argument("--input", required=True,
+                        help="Path to findings JSON")
+    sp_rep.add_argument("--output", default="reports",
+                        help="Output directory")
+    sp_rep.add_argument("--format", default="markdown,json,html",
+                        help="Comma-separated: markdown,json,html")
+    sp_rep.add_argument("--target", default="")
+    sp_rep.add_argument("--program", default="")
+    sp_rep.set_defaults(func=_cmd_report)
 
     sp_scan = sub.add_parser("scan", help="Vulnerability detection via Nuclei")
     sp_scan.add_argument("--target", required=True)

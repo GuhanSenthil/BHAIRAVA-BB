@@ -32,26 +32,33 @@ class ToolRegistry:
 
 
 def default_registry() -> ToolRegistry:
-    from .adapters.subfinder import SubfinderAdapter
-    from .adapters.amass import AmassAdapter
-    from .adapters.assetfinder import AssetfinderAdapter
-    from .adapters.httpx import HttpxAdapter
-    from .adapters.gau import GauAdapter
-    from .adapters.waybackurls import WaybackurlsAdapter
-    from .adapters.ffuf import FfufAdapter
-    from .adapters.linkfinder import LinkfinderAdapter
-    from .adapters.nuclei import NucleiAdapter
+    """Build the registry. Missing adapter modules are skipped, not fatal."""
     r = ToolRegistry()
-    r.register(SubfinderAdapter())
-    r.register(AmassAdapter())
-    r.register(AssetfinderAdapter())
-    r.register(HttpxAdapter())
-    r.register(GauAdapter())
-    r.register(WaybackurlsAdapter())
-    r.register(FfufAdapter())
-    r.register(LinkfinderAdapter())
-    r.register(NucleiAdapter())
+    specs = [
+        (".adapters.subfinder", "SubfinderAdapter"),
+        (".adapters.amass", "AmassAdapter"),
+        (".adapters.assetfinder", "AssetfinderAdapter"),
+        (".adapters.httpx", "HttpxAdapter"),
+        (".adapters.gau", "GauAdapter"),
+        (".adapters.waybackurls", "WaybackurlsAdapter"),
+        (".adapters.ffuf", "FfufAdapter"),
+        (".adapters.linkfinder", "LinkfinderAdapter"),
+        (".adapters.nuclei", "NucleiAdapter"),
+        (".adapters.dalfox", "DalfoxAdapter"),
+        (".adapters.sqlmap", "SqlmapAdapter"),
+    ]
+    import importlib
+    for module_name, class_name in specs:
+        try:
+            mod = importlib.import_module(module_name, package=__package__)
+            cls = getattr(mod, class_name)
+            r.register(cls())
+        except Exception:
+            # Adapter module missing or broken -- skip it
+            continue
     return r
+
+
 
 
 def render_registry_status(reg: ToolRegistry) -> str:
