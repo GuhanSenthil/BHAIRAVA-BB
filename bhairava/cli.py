@@ -43,11 +43,11 @@ def _cmd_status(_args) -> int:
 
 
 def _cmd_tools(args) -> int:
-    """Check installed external tools."""
-    from .utils.tools import check_tools, render_tool_status
-    results = check_tools()
-    print(render_tool_status(results))
-    return 0 if all(ok for _, ok in results) else 4
+    """Check installed external tools via the adapter registry."""
+    from .tools.registry import default_registry, render_registry_status
+    reg = default_registry()
+    print(render_registry_status(reg))
+    return 0 if reg.available() else 4
 
 
 def _cmd_config_validate(args) -> int:
@@ -75,6 +75,71 @@ def _cmd_pipeline(args) -> int:
         info("planned modules: recon, discover, scan, evidence, report")
         return 0
     warn("non-dry-run pipeline not implemented yet (Phase 2)")
+    return 0
+
+
+def _cmd_recon(args) -> int:
+    from .core.executor import ToolExecutor
+    from .core.rate_limiter import RateLimiter
+    from .recon.engine import ReconEngine
+    from .scope_guard import ScopeGuard
+    from .storage.json_store import JsonStore
+    from .tools.registry import default_registry
+
+    guard = ScopeGuard.from_yaml(args.scope)
+    rl = RateLimiter(guard.scope.requests_per_second)
+    executor = ToolExecutor(guard, rate_limiter=rl)
+    engine = ReconEngine(executor, default_registry(), guard)
+
+    info(f"recon on {args.target}")
+    result = engine.run(args.target, timeout=args.timeout)
+    success(f"hosts: {len(result.hosts)}")
+    for src, n in result.sources.items():
+        info(f"  {src}: {n}")
+    for skip in result.skipped:
+        warn(f"  skipped {skip}")
+    for err in result.errors:
+        warn(f"  error: {err}")
+
+    store = JsonStore(args.data_dir)
+    path = store.save("recon", {"target": args.target,
+                                "hosts": result.hosts,
+                                "sources": result.sources,
+                                "errors": result.errors}, subdir="recon")
+    success(f"saved: {path}")
+    return 0
+
+
+def _cmd_discover(args) -> int:
+    from .core.executor import ToolExecutor
+    from .core.rate_limiter import RateLimiter
+    from .discovery.engine import DiscoveryEngine
+    from .scope_guard import ScopeGuard
+    from .storage.json_store import JsonStore
+    from .tools.registry import default_registry
+
+    guard = ScopeGuard.from_yaml(args.scope)
+    rl = RateLimiter(guard.scope.requests_per_second)
+    executor = ToolExecutor(guard, rate_limiter=rl)
+    engine = DiscoveryEngine(executor, default_registry(), guard)
+
+    info(f"discovery on {args.target}")
+    result = engine.run(args.target, timeout=args.timeout,
+                        include_active=args.active)
+    success(f"endpoints: {len(result.endpoints)}")
+    for src, n in result.sources.items():
+        info(f"  {src}: {n}")
+    for skip in result.skipped:
+        warn(f"  skipped {skip}")
+    for err in result.errors:
+        warn(f"  error: {err}")
+
+    store = JsonStore(args.data_dir)
+    path = store.save("discover", {"target": args.target,
+                                   "endpoints": result.endpoints,
+                                   "sources": result.sources,
+                                   "errors": result.errors}, subdir="discovery")
+    success(f"saved: {path}")
     return 0
 
 
@@ -108,6 +173,20 @@ def build_parser() -> argparse.ArgumentParser:
     sp_cfg_sub = sp_cfg.add_subparsers(dest="cfg_cmd")
     cv = sp_cfg_sub.add_parser("validate", help="Validate scope YAML")
     cv.set_defaults(func=_cmd_config_validate)
+
+    sp_recon = sub.add_parser("recon", help="Subdomain and asset reconnaissance")
+    sp_recon.add_argument("--target", required=True)
+    sp_recon.add_argument("--timeout", type=int, default=120)
+    sp_recon.add_argument("--data-dir", default="data")
+    sp_recon.set_defaults(func=_cmd_recon)
+
+    sp_disc = sub.add_parser("discover", help="URL and endpoint discovery")
+    sp_disc.add_argument("--target", required=True)
+    sp_disc.add_argument("--timeout", type=int, default=120)
+    sp_disc.add_argument("--active", action="store_true",
+                         help="Include ffuf/linkfinder (fuzzing)")
+    sp_disc.add_argument("--data-dir", default="data")
+    sp_disc.set_defaults(func=_cmd_discover)
 
     sp_pipe = sub.add_parser("pipeline", help="Run authorized workflow")
     sp_pipe.add_argument("--dry-run", action="store_true")
