@@ -1,65 +1,149 @@
-"""bhairava.findings.lifecycle -- state machine for findings."""
+"""Finding lifecycle supporting both legacy status and V6 state."""
+
 from __future__ import annotations
 
-from .models import Finding
-
-# Allowed transitions
-_TRANSITIONS: dict[str, set[str]] = {
-    "CANDIDATE": {"NEEDS_REVIEW", "REJECTED", "DUPLICATE"},
-    "NEEDS_REVIEW": {"CONFIRMED", "REJECTED", "DUPLICATE"},
-    "CONFIRMED": {"REPORTED", "DUPLICATE"},
-    "REJECTED": set(),
-    "DUPLICATE": set(),
-    "REPORTED": set(),
-}
+from .models import Finding, FindingState
 
 
 class LifecycleError(ValueError):
-    pass
+    """Raised when an invalid finding lifecycle transition is requested."""
 
 
-def transition(finding: Finding, new_status: str) -> None:
-    current = finding.status
-    allowed = _TRANSITIONS.get(current, set())
-    if new_status not in allowed:
-        raise LifecycleError(
-            f"illegal transition {current} -> {new_status} "
-            f"(allowed: {sorted(allowed)})"
-        )
-    finding.status = new_status
+_ALLOWED = {
+    FindingState.CANDIDATE: {
+        FindingState.NEEDS_REVIEW,
+        FindingState.DUPLICATE,
+        FindingState.REJECTED,
+    },
+    FindingState.NEEDS_REVIEW: {
+        FindingState.CONFIRMED,
+        FindingState.DUPLICATE,
+        FindingState.REJECTED,
+    },
+    FindingState.CONFIRMED: {
+        FindingState.REPORTED,
+        FindingState.DUPLICATE,
+        FindingState.REJECTED,
+    },
+    FindingState.REPORTED: set(),
+    FindingState.DUPLICATE: set(),
+    FindingState.REJECTED: set(),
+}
 
 
-def can_transition(finding: Finding, new_status: str) -> bool:
-    return new_status in _TRANSITIONS.get(finding.status, set())
+def _state(finding: Finding) -> FindingState:
+    value = getattr(finding, "state", None)
+
+    if isinstance(value, FindingState):
+        return value
+
+    value = str(getattr(finding, "status", "CANDIDATE")).upper()
+
+    return FindingState(value)
 
 
-def promote_to_review(f: Finding) -> None:
-    if f.status == "CANDIDATE":
-        transition(f, "NEEDS_REVIEW")
-
-
-def confirm(f: Finding) -> None:
-    """Human or validation engine confirms a finding."""
-    if f.status == "CANDIDATE":
-        transition(f, "NEEDS_REVIEW")
-    if f.status == "NEEDS_REVIEW":
-        transition(f, "CONFIRMED")
-
-
-def reject(f: Finding) -> None:
-    """Move finding to REJECTED.
-
-    Raises LifecycleError if the current state does not allow rejection
-    (e.g. already REJECTED, DUPLICATE, or REPORTED).
+def can_transition(
+    current,
+    new_state,
+) -> bool:
     """
-    transition(f, "REJECTED")
+    Compatibility helper.
+
+    Accepts either:
+        can_transition(FindingState.CANDIDATE, FindingState.NEEDS_REVIEW)
+    or:
+        can_transition(finding, "NEEDS_REVIEW")
+    """
+    from .models import Finding
+
+    if isinstance(current, Finding):
+        current_state = _state(current)
+    elif isinstance(current, FindingState):
+        current_state = current
+    else:
+        current_state = FindingState(str(current).upper())
+
+    if isinstance(new_state, FindingState):
+        target_state = new_state
+    else:
+        target_state = FindingState(str(new_state).upper())
+
+    return target_state in _ALLOWED.get(current_state, set())
 
 
-def mark_duplicate(f: Finding) -> None:
-    if f.status in ("CANDIDATE", "NEEDS_REVIEW", "CONFIRMED"):
-        transition(f, "DUPLICATE")
+def transition(
+    finding: Finding,
+    new_state: FindingState | str,
+) -> Finding:
+    current = _state(finding)
+
+    target = (
+        new_state
+        if isinstance(new_state, FindingState)
+        else FindingState(str(new_state).upper())
+    )
+
+    if not can_transition(current, target):
+        raise LifecycleError(
+            f"Invalid finding transition: "
+            f"{current.value} -> {target.value}"
+        )
+
+    finding.set_state(target)
+
+    return finding
 
 
-def mark_reported(f: Finding) -> None:
-    if f.status == "CONFIRMED":
-        transition(f, "REPORTED")
+def promote_to_review(finding: Finding) -> Finding:
+    return transition(finding, FindingState.NEEDS_REVIEW)
+
+
+def confirm(finding: Finding) -> Finding:
+    current = _state(finding)
+
+    # Preserve legacy behavior: candidate → review → confirmed.
+    if current == FindingState.CANDIDATE:
+        transition(finding, FindingState.NEEDS_REVIEW)
+
+    return transition(finding, FindingState.CONFIRMED)
+
+
+def reject(finding: Finding) -> Finding:
+    current = _state(finding)
+
+    if current in (
+        FindingState.CANDIDATE,
+        FindingState.NEEDS_REVIEW,
+        FindingState.CONFIRMED,
+    ):
+        return transition(finding, FindingState.REJECTED)
+
+    raise LifecycleError(
+        f"Cannot reject finding in state {current.value}"
+    )
+
+
+def mark_duplicate(finding: Finding) -> Finding:
+    current = _state(finding)
+
+    if current in (
+        FindingState.CANDIDATE,
+        FindingState.NEEDS_REVIEW,
+        FindingState.CONFIRMED,
+    ):
+        return transition(finding, FindingState.DUPLICATE)
+
+    raise LifecycleError(
+        f"Cannot mark duplicate from state {current.value}"
+    )
+
+
+def mark_reported(finding: Finding) -> Finding:
+    current = _state(finding)
+
+    if current != FindingState.CONFIRMED:
+        raise LifecycleError(
+            f"Cannot mark reported from state {current.value}"
+        )
+
+    return transition(finding, FindingState.REPORTED)

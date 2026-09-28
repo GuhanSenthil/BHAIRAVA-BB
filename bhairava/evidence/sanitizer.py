@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-REDACTED = "***REDACTED***"
+REDACTED = "[REDACTED]"
 
 _SENSITIVE_HEADERS = {
     "authorization", "proxy-authorization", "cookie", "set-cookie",
@@ -18,6 +18,9 @@ _PATTERNS = [
     (re.compile(r"\bghp_[A-Za-z0-9]{20,}\b"), REDACTED),
     (re.compile(r"\bgsk_[A-Za-z0-9]{20,}\b"), REDACTED),
     (re.compile(r"\bAIza[0-9A-Za-z\-_]{30,}\b"), REDACTED),
+    (re.compile(
+        r"(?i)(api[_-]?key|access[_-]?key|secret[_-]?key|client[_-]?secret|password|passwd|token|auth[_-]?token)\s*[:=]\s*[^\s,;]+"
+    ), REDACTED),
 ]
 
 

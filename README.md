@@ -114,3 +114,84 @@ The suite includes explicit negative tests for:
 
 
 
+
+---
+
+# BHAIRAVA-BB V6
+
+BHAIRAVA-BB V6 extends the framework with an asset-centric security research architecture.
+
+## V6 Pipeline
+
+```text
+Scope
+  ↓
+Recon
+  ↓
+Asset Intelligence
+  ↓
+Discovery
+  ↓
+Detection
+  ↓
+Finding Correlation
+  ↓
+Evidence
+  ↓
+Human Review
+  ↓
+Report
+
+
+V6 Architecture
+Asset Intelligence
+- Asset normalization
+- Asset deduplication
+- Technology fingerprinting
+- Asset relationship graph
+- Persistent asset repository
+Finding Intelligence
+- Finding correlation
+- Confidence handling
+- Finding deduplication
+- Lifecycle management
+Evidence
+- Structured evidence
+- Sanitization
+- Integrity hashing
+- Reproduction metadata
+Resumable Jobs
+- Checkpoints
+- Resume support
+- Pipeline stages
+Planning
+- Deterministic execution planning
+- Dry-run support
+Database
+- Versioned migrations
+- SQLite persistence
+- Controlled schema evolution
+Reporting
+- Report templates
+- Report exporters
+AI Safety
+AI is optional and disabled by default.
+The controlled architecture is:
+AI
+ ↓
+Policy Engine
+ ↓
+Scope Guard
+ ↓
+Secure Executor
+ ↓
+Evidence
+ ↓
+Human Review
+
+AI cannot independently expand scope, remove exclusions, disable safety limits, execute arbitrary shell commands, approve destructive operations, or confirm findings without the deterministic workflow.
+Verification
+The V6 implementation has passed the full automated regression suite:
+152 passed
+
+See the complete [V6 Architecture](docs/architecture/BHAIRAVA-BB-V6-ARCHITECTURE.md).

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from .hashing import evidence_hash
-from .sanitizer import sanitize, sanitize_headers
+from .sanitizer import sanitize, sanitize_headers, sanitize_text
 
 
 def _now() -> str:
@@ -20,6 +20,18 @@ class EvidenceCollector:
                       tool: str = "", note: str = "") -> dict:
         req_headers = sanitize_headers(request.get("headers") or {})
         resp_headers = sanitize_headers(response.get("headers") or {})
+
+        # Preserve the historical http_exchange() output contract.
+        # sanitize_headers() uses [REDACTED], while this legacy
+        # API exposes sensitive HTTP headers as ***REDACTED***.
+        req_headers = {
+            k: "***REDACTED***" if v == "[REDACTED]" else v
+            for k, v in req_headers.items()
+        }
+        resp_headers = {
+            k: "***REDACTED***" if v == "[REDACTED]" else v
+            for k, v in resp_headers.items()
+        }
         body_preview = sanitize(response.get("body_preview", ""),
                                 self.max_preview_bytes)
         record = {
@@ -62,6 +74,52 @@ class EvidenceCollector:
             "tool": tool, "stdout": safe_stdout, "exit_code": exit_code,
         })
         return record
+
+    def collect(
+        self,
+        evidence_id: str,
+        finding_id: str,
+        target: str,
+        source: str,
+        tool_output: str = "",
+        confidence: float = 0.0,
+        note: str = "",
+    ):
+        """Create a V6 Evidence object with sanitized output and integrity hash."""
+        from .models import Evidence
+
+        sanitized_output = sanitize_text(
+            tool_output,
+            max_bytes=self.max_preview_bytes,
+        )
+
+        metadata = {
+            "source": source,
+        }
+
+        if note:
+            metadata["note"] = note
+
+        digest_input = "|".join((
+            evidence_id,
+            finding_id,
+            target,
+            source,
+            sanitized_output,
+        ))
+
+        digest = evidence_hash(digest_input)
+
+        return Evidence(
+            evidence_id=evidence_id,
+            finding_id=finding_id,
+            target=target,
+            source=source,
+            tool_output=sanitized_output,
+            request_metadata=metadata,
+            confidence=confidence,
+            sha256=digest,
+        )
 
     def custom(self, kind: str, payload: Any, note: str = "") -> dict:
         safe = sanitize(payload, self.max_preview_bytes)

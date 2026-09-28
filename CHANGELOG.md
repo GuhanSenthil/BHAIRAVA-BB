@@ -1,4 +1,38 @@
-﻿# Changelog
+# Changelog
+
+All notable changes to BHAIRAVA-BB are documented here.
+
+## V6
+
+### Added
+
+- Asset Intelligence with normalization and deduplication.
+- Technology fingerprinting and asset relationships.
+- Persistent asset repository.
+- Finding correlation and deduplication.
+- Finding confidence handling.
+- Structured evidence models.
+- Evidence sanitization and integrity hashing.
+- Resumable job checkpoints and resume support.
+- Pipeline stage modeling.
+- Database migration infrastructure.
+- Deterministic planning and dry-run support.
+- Reporting templates and exporters.
+- V6 regression coverage.
+
+### Compatibility
+
+- Preserved legacy finding lifecycle interfaces.
+- Preserved legacy evidence collector interfaces.
+- Preserved existing sanitizer compatibility.
+- Preserved the established scope and authorization architecture.
+
+### Verification
+
+- Full automated regression suite: 152 tests passed.
+- Documentation diff validation passed.
+
+# Changelog
 
 All notable changes to BHAIRAVA-BB are documented here.
 
@@ -76,5 +110,3 @@ BHAIRAVA-BB does not grant authorization to test third-party systems.
 Operators are responsible for obtaining authorization, respecting program
 rules and exclusions, respecting rate limits and technique restrictions,
 obtaining required notice or consent, and complying with applicable law.
-
-
