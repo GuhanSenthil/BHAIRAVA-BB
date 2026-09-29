@@ -26,6 +26,15 @@ LINKFINDER_DIR="/opt/bhairava-linkfinder"
 LINKFINDER_VENV="${LINKFINDER_DIR}/.venv"
 BHAIRAVA_LINK="${BIN_DIR}/bhairava"
 
+# Preserve the user who invoked sudo so project-owned Python artifacts
+# are not accidentally created as root.
+INSTALL_USER="${SUDO_USER:-}"
+if [[ -z "${INSTALL_USER}" || "${INSTALL_USER}" == "root" ]]; then
+    INSTALL_USER="$(id -un)"
+fi
+
+INSTALL_GROUP="$(id -gn "${INSTALL_USER}")"
+
 TOOLS=(
     subfinder
     amass
@@ -70,7 +79,7 @@ export DEBIAN_FRONTEND=noninteractive
 
 log "BHAIRAVA-BB installer"
 echo "[*] Repository: ${REPO_DIR}"
-echo "[*] User: ${SUDO_USER:-root}"
+echo "[*] Installer user: ${INSTALL_USER}"
 echo "[*] Architecture: $(uname -m)"
 
 log "Installing system dependencies"
@@ -203,10 +212,15 @@ log "Verifying all 11 core tools"
 
 check_tool() {
     local name="$1"
+    local path=""
 
-    if command -v "${name}" >/dev/null 2>&1; then
-        local path
+    if [[ -x "${BIN_DIR}/${name}" ]]; then
+        path="${BIN_DIR}/${name}"
+    elif command -v "${name}" >/dev/null 2>&1; then
         path="$(command -v "${name}")"
+    fi
+
+    if [[ -n "${path}" ]]; then
         echo "[+] ${name}: ${path}"
         return 0
     fi
@@ -239,18 +253,20 @@ ok "ALL 11 CORE TOOLS ARE INSTALLED."
 
 log "Creating BHAIRAVA virtual environment"
 
-if [[ ! -d "${VENV_DIR}" ]]; then
-    python3 -m venv "${VENV_DIR}"
+# The repository and its Python environment belong to the invoking user,
+# not root. This prevents root-owned egg-info and other build artifacts.
+if [[ -e "${VENV_DIR}" ]]; then
+    chown -R "${INSTALL_USER}:${INSTALL_GROUP}" "${VENV_DIR}"
+else
+    runuser -u "${INSTALL_USER}" -- python3 -m venv "${VENV_DIR}"
 fi
 
-# shellcheck disable=SC1091
-source "${VENV_DIR}/bin/activate"
-
-python -m pip install --upgrade pip
+chown -R "${INSTALL_USER}:${INSTALL_GROUP}" "${REPO_DIR}"
 
 log "Installing BHAIRAVA-BB"
 
-python -m pip install -e "${REPO_DIR}"
+runuser -u "${INSTALL_USER}" -- "${VENV_DIR}/bin/python" -m pip install --upgrade pip
+runuser -u "${INSTALL_USER}" -- "${VENV_DIR}/bin/python" -m pip install -e "${REPO_DIR}"
 
 ln -sf "${VENV_DIR}/bin/bhairava" "${BHAIRAVA_LINK}"
 chmod 755 "${BHAIRAVA_LINK}"
@@ -264,7 +280,8 @@ log "Verifying BHAIRAVA"
 
 log "Verifying BHAIRAVA tool registry"
 
-"${BHAIRAVA_LINK}" tools
+BHAIRAVA_PATH="/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin"
+PATH="${BHAIRAVA_PATH}" "${BHAIRAVA_LINK}" tools
 
 log "First-run setup"
 
@@ -327,13 +344,14 @@ else
     echo
     echo "To configure scope and tool selection interactively, run:"
     echo
-    echo "  sudo env PATH=\"/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\" bash ./install.sh --setup"
+    echo "  sudo ./install.sh --setup"
     echo
 fi
 
 log "Final verification"
 
-"${BHAIRAVA_LINK}" tools
+BHAIRAVA_PATH="/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin"
+PATH="${BHAIRAVA_PATH}" "${BHAIRAVA_LINK}" tools
 
 echo
 echo "============================================================"
@@ -345,7 +363,8 @@ echo "BHAIRAVA version:"
 
 echo
 echo "Core tools:"
-"${BHAIRAVA_LINK}" tools
+BHAIRAVA_PATH="/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin"
+PATH="${BHAIRAVA_PATH}" "${BHAIRAVA_LINK}" tools
 
 echo
 echo "Scope configuration:"

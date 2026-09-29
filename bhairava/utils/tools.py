@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass(frozen=True)
@@ -29,10 +31,17 @@ TOOLS = (
 
 
 def executable(tool: ToolSpec) -> str | None:
+    managed_dir = Path("/usr/local/bin")
+
     for command in tool.commands:
+        managed_path = managed_dir / command
+        if managed_path.is_file() and os.access(managed_path, os.X_OK):
+            return str(managed_path)
+
         path = shutil.which(command)
         if path:
             return path
+
     return None
 
 
