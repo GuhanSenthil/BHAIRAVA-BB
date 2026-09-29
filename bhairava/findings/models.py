@@ -8,8 +8,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
-from urllib.parse import urlparse, parse_qsl, urlunparse
-
+from urllib.parse import urlparse, urlunparse
 
 SEVERITIES = ("info", "low", "medium", "high", "critical")
 

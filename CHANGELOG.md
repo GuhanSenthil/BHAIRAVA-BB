@@ -30,11 +30,6 @@ All notable changes to BHAIRAVA-BB are documented here.
 ### Verification
 
 - Full automated regression suite: 152 tests passed.
-- Documentation diff validation passed.
-
-# Changelog
-
-All notable changes to BHAIRAVA-BB are documented here.
 
 The format follows Keep a Changelog and Semantic Versioning.
 
@@ -79,6 +74,7 @@ Verified project test result:
 
 ```text
 124 passed
+```
 The test count may change as the project evolves.
 
 ### Pipeline
@@ -93,6 +89,7 @@ detection
 validation
 evidence
 report
+```
 ### Documentation
 
 - `README.md`

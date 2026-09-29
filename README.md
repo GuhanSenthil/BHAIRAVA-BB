@@ -1,4 +1,4 @@
-﻿# BHAIRAVA-BB
+# BHAIRAVA-BB
 [![Tests](https://github.com/GuhanSenthil/BHAIRAVA-BB/actions/workflows/tests.yml/badge.svg)](https://github.com/GuhanSenthil/BHAIRAVA-BB/actions/workflows/tests.yml)
 [![Lint](https://github.com/GuhanSenthil/BHAIRAVA-BB/actions/workflows/lint.yml/badge.svg)](https://github.com/GuhanSenthil/BHAIRAVA-BB/actions/workflows/lint.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -106,11 +106,11 @@ The suite includes explicit negative tests for:
 - pipeline dry-run creating no files
 \n## Documentation
 
-- [Architecture](docs/architecture.md) — system architecture and data flow
-- [Scope Management](docs/scope-management.md) — authorization and scope configuration
-- [Troubleshooting](docs/troubleshooting.md) — common installation and runtime issues
-- [Security Policy](SECURITY.md) — security vulnerability reporting
-- [Contributing](CONTRIBUTING.md) — contribution workflow
+- [Architecture](docs/architecture.md) - system architecture and data flow
+- [Scope Management](docs/scope-management.md) - authorization and scope configuration
+- [Troubleshooting](docs/troubleshooting.md) - common installation and runtime issues
+- [Security Policy](SECURITY.md) - security vulnerability reporting
+- [Contributing](CONTRIBUTING.md) - contribution workflow
 
 
 
@@ -125,22 +125,23 @@ BHAIRAVA-BB V6 extends the framework with an asset-centric security research arc
 
 ```text
 Scope
-  ↓
+  ->
 Recon
-  ↓
+  ->
 Asset Intelligence
-  ↓
+  ->
 Discovery
-  ↓
+  ->
 Detection
-  ↓
+  ->
 Finding Correlation
-  ↓
+  ->
 Evidence
-  ↓
+  ->
 Human Review
-  ↓
+  ->
 Report
+```
 
 
 V6 Architecture
@@ -178,15 +179,15 @@ AI Safety
 AI is optional and disabled by default.
 The controlled architecture is:
 AI
- ↓
+ ->
 Policy Engine
- ↓
+ ->
 Scope Guard
- ↓
+ ->
 Secure Executor
- ↓
+ ->
 Evidence
- ↓
+ ->
 Human Review
 
 AI cannot independently expand scope, remove exclusions, disable safety limits, execute arbitrary shell commands, approve destructive operations, or confirm findings without the deterministic workflow.

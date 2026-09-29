@@ -11,15 +11,15 @@ The V6 architecture extends the existing BHAIRAVA-BB framework without removing 
 The V6 logical pipeline is:
 
 Scope
-? Recon
-? Asset Intelligence
-? Discovery
-? Detection
-? Finding Correlation
-? Evidence
-? Review
-? Report
-? Completed
+-> Recon
+-> Asset Intelligence
+-> Discovery
+-> Detection
+-> Finding Correlation
+-> Evidence
+-> Review
+-> Report
+-> Completed
 
 The Scope Guard remains mandatory before active network or security operations.
 
@@ -63,11 +63,11 @@ V6 introduces an asset intelligence layer.
 The asset pipeline is:
 
 Recon
-? Normalization
-? Deduplication
-? Technology Fingerprinting
-? Relationship Graph
-? Asset Repository
+-> Normalization
+-> Deduplication
+-> Technology Fingerprinting
+-> Relationship Graph
+-> Asset Repository
 
 Supported asset categories include:
 
@@ -135,9 +135,9 @@ Parent-child relationships allow the framework to construct an asset graph.
 Findings retain the established lifecycle:
 
 CANDIDATE
-? NEEDS_REVIEW
-? CONFIRMED
-? REPORTED
+-> NEEDS_REVIEW
+-> CONFIRMED
+-> REPORTED
 
 Additional states include:
 
@@ -211,8 +211,8 @@ The V6 stage model includes:
 
 - scope
 - recon
-- discovery
 - asset intelligence
+- discovery
 - detection
 - correlation
 - evidence
@@ -256,11 +256,11 @@ AI is optional and disabled by default.
 The safety architecture is:
 
 AI
-? Policy Engine
-? Scope Guard
-? Secure Executor
-? Evidence
-? Human Review
+-> Policy Engine
+-> Scope Guard
+-> Secure Executor
+-> Evidence
+-> Human Review
 
 AI must not:
 
@@ -317,55 +317,55 @@ DO NOT TEST.
 ```text
 bhairava/
 +-- assets/
-Â¦   +-- models.py
-Â¦   +-- normalizer.py
-Â¦   +-- deduplicator.py
-Â¦   +-- fingerprint.py
-Â¦   +-- graph.py
-Â¦   +-- repository.py
+|   +-- models.py
+|   +-- normalizer.py
+|   +-- deduplicator.py
+|   +-- fingerprint.py
+|   +-- graph.py
+|   +-- repository.py
 +-- evidence/
-Â¦   +-- collector.py
-Â¦   +-- integrity.py
-Â¦   +-- models.py
-Â¦   +-- sanitizer.py
-Â¦   +-- repository.py
+|   +-- collector.py
+|   +-- integrity.py
+|   +-- models.py
+|   +-- sanitizer.py
+|   +-- store.py
 +-- findings/
-Â¦   +-- correlator.py
-Â¦   +-- confidence.py
-Â¦   +-- deduplicator.py
-Â¦   +-- lifecycle.py
+|   +-- correlator.py
+|   +-- confidence.py
+|   +-- deduplicator.py
+|   +-- lifecycle.py
 +-- jobs/
-Â¦   +-- checkpoint.py
-Â¦   +-- resume.py
-Â¦   +-- stages.py
+|   +-- checkpoint.py
+|   +-- resume.py
+|   +-- stages.py
 +-- migrations/
-Â¦   +-- runner.py
+|   +-- runner.py
 +-- planning/
-Â¦   +-- planner.py
-Â¦   +-- models.py
+|   +-- planner.py
+|   +-- models.py
 +-- reporting/
     +-- templates.py
     +-- exporters.py
 
-25. Verification
+## 25. Verification
 The V6 implementation has been regression-tested before integration.
 The verified test suite contains:
 152 tests passed.
 The implementation should continue to pass the full regression suite before future architectural changes are merged.
-26. Compatibility Principle
+## 26. Compatibility Principle
 V6 is additive.
 Existing public APIs should not be removed merely to introduce V6 functionality.
 Where V6 introduces new models or lifecycle representations, compatibility adapters should preserve established interfaces where practical.
-27. Development Rule
+## 27. Development Rule
 Every future architectural change should follow:
 Design
-? Implement
-? Unit tests
-? Full regression
-? Diff check
-? Secret review
-? Commit
-? Pull request
-? CI
-? Review
-? Merge
+-> Implement
+-> Unit tests
+-> Full regression
+-> Diff check
+-> Secret review
+-> Commit
+-> Pull request
+-> CI
+-> Review
+-> Merge
