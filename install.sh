@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # BHAIRAVA-BB installer for Kali Linux / Debian-based systems.
 #
 # Installs:
@@ -266,11 +266,16 @@ log "Verifying BHAIRAVA tool registry"
 
 "${BHAIRAVA_LINK}" tools
 
-log "Running first-run setup"
+log "First-run setup"
 
 cd "${REPO_DIR}"
 
-python - <<'PY'
+if [[ "${1:-}" == "--setup" ]]; then
+    log "Interactive setup explicitly requested"
+
+    setup_script="$(mktemp)"
+
+    cat > "${setup_script}" <<'PYTHON'
 from pathlib import Path
 
 from bhairava.setup import run_first_setup
@@ -297,7 +302,34 @@ run_first_setup(
     config_path=str(config),
     available_tools=available,
 )
-PY
+PYTHON
+
+    "${VENV_DIR}/bin/python" "${setup_script}"
+    setup_status=$?
+
+    rm -f "${setup_script}"
+
+    if [[ $setup_status -ne 0 ]]; then
+        log "First-run setup failed"
+        exit "$setup_status"
+    fi
+
+else
+    log "Interactive setup not requested; skipping first-run setup"
+
+    echo
+    echo "============================================================"
+    echo "BHAIRAVA-BB FIRST-RUN SETUP SKIPPED"
+    echo "============================================================"
+    echo
+    echo "Installation completed successfully."
+    echo "Core tools and BHAIRAVA-BB are installed."
+    echo
+    echo "To configure scope and tool selection interactively, run:"
+    echo
+    echo "  sudo env PATH=\"/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\" bash ./install.sh --setup"
+    echo
+fi
 
 log "Final verification"
 
