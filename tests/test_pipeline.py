@@ -73,7 +73,28 @@ def test_resume_reuses_job(tmp_path, scope_file):
     )
     p2 = Pipeline(cfg2)
     try:
-        r2 = p2.run()
+        class FakeReconResult:
+            hosts = ["example.com"]
+            errors = []
+            sources = {"test": 1}
+
+        class FakeReconEngine:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def run(self, target, timeout=120):
+                assert target == "example.com"
+                return FakeReconResult()
+
+        monkeypatch = pytest.MonkeyPatch()
+        monkeypatch.setattr(
+            "bhairava.pipeline.engine.ReconEngine",
+            FakeReconEngine,
+        )
+        try:
+            r2 = p2.run()
+        finally:
+            monkeypatch.undo()
         assert r2.job.id == job_id
         assert "scope" in r2.job.stages_run
         assert "recon" in r2.job.stages_run
