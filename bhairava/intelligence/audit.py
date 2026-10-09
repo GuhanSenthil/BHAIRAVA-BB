@@ -3,10 +3,41 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+_SECRET_KEY_PATTERN = re.compile(
+    r"(password|passwd|secret|token|api[_-]?key|authorization|"
+    r"cookie|credential|private[_-]?key)",
+    re.IGNORECASE,
+)
+_BEARER_PATTERN = re.compile(r"(?i)\bBearer\s+\S+")
+
+
+def _redact(value: Any, key: str = "") -> Any:
+    """Return JSON-compatible audit details with sensitive values redacted."""
+    if _SECRET_KEY_PATTERN.search(key):
+        return "[REDACTED]"
+
+    if isinstance(value, dict):
+        return {
+            str(item_key): _redact(item_value, str(item_key))
+            for item_key, item_value in value.items()
+        }
+
+    if isinstance(value, (list, tuple)):
+        return [_redact(item) for item in value]
+
+    if isinstance(value, str):
+        return _BEARER_PATTERN.sub("Bearer [REDACTED]", value)
+
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+
+    return str(value)
 
 
 @dataclass(frozen=True)
@@ -36,7 +67,7 @@ class AuditLog:
             action=action,
             entity_type=entity_type,
             entity_id=entity_id,
-            details=dict(details or {}),
+            details=_redact(details or {}),
         )
         self._events.append(event)
         return event
