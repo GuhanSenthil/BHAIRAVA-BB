@@ -55,6 +55,24 @@ class AuditLog:
     def __init__(self, path: str | Path | None = None) -> None:
         self.path = Path(path) if path else None
         self._events: list[AuditEvent] = []
+        if self.path is not None and self.path.is_file():
+            try:
+                payload = json.loads(self.path.read_text(encoding="utf-8"))
+                if not isinstance(payload, list):
+                    raise ValueError("Audit log must contain a JSON list")
+                self._events = [
+                    AuditEvent(
+                        action=str(item["action"]),
+                        entity_type=str(item["entity_type"]),
+                        entity_id=str(item["entity_id"]),
+                        details=_redact(item.get("details", {})),
+                        timestamp=str(item["timestamp"]),
+                    )
+                    for item in payload
+                    if isinstance(item, dict)
+                ]
+            except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+                raise ValueError(f"Unable to load audit log {self.path}: {exc}") from exc
 
     def record(
         self,

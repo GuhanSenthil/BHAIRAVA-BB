@@ -46,3 +46,22 @@ def test_audit_log_does_not_persist_common_secrets(tmp_path):
     assert "secret-value" not in content
     assert "token-value" not in content
     assert "completed" in content
+
+
+def test_audit_log_loads_saved_events(tmp_path):
+    path = tmp_path / "audit.json"
+    first = AuditLog(path)
+    first.record(
+        "finding.reviewed",
+        "finding",
+        "finding-2",
+        {"api_key": "do-not-persist"},
+    )
+    first.save()
+
+    second = AuditLog(path)
+
+    assert len(second.all()) == 1
+    assert second.all()[0].action == "finding.reviewed"
+    assert second.all()[0].entity_id == "finding-2"
+    assert second.all()[0].details["api_key"] == "[REDACTED]"
