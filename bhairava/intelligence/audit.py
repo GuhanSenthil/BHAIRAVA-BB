@@ -68,13 +68,30 @@ class AuditLog:
                 if not all(isinstance(item, dict) for item in payload):
                     raise ValueError("Every audit log entry must be a JSON object")
 
+                required_fields = (
+                    "action",
+                    "entity_type",
+                    "entity_id",
+                    "timestamp",
+                )
+                for index, item in enumerate(payload):
+                    for field_name in required_fields:
+                        if not isinstance(item.get(field_name), str):
+                            raise ValueError(
+                                f"Audit entry {index}: {field_name} must be a string"
+                            )
+                    if not isinstance(item.get("details", {}), dict):
+                        raise ValueError(
+                            f"Audit entry {index}: details must be a JSON object"
+                        )
+
                 self._events = [
                     AuditEvent(
-                        action=str(item["action"]),
-                        entity_type=str(item["entity_type"]),
-                        entity_id=str(item["entity_id"]),
+                        action=item["action"],
+                        entity_type=item["entity_type"],
+                        entity_id=item["entity_id"],
                         details=_redact(item.get("details", {})),
-                        timestamp=str(item["timestamp"]),
+                        timestamp=item["timestamp"],
                     )
                     for item in payload
                 ]

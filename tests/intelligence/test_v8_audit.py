@@ -127,3 +127,49 @@ def test_audit_log_rejects_missing_required_fields(tmp_path):
 
     with pytest.raises(ValueError, match="Unable to load audit log"):
         AuditLog(path)
+
+
+def test_audit_log_rejects_non_string_required_fields(tmp_path):
+    import pytest
+
+    path = tmp_path / "audit.json"
+    path.write_text(
+        json.dumps(
+            [
+                {
+                    "action": 123,
+                    "entity_type": "finding",
+                    "entity_id": "finding-1",
+                    "details": {},
+                    "timestamp": "2026-01-01T00:00:00+00:00",
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="Unable to load audit log"):
+        AuditLog(path)
+
+
+def test_audit_log_rejects_non_object_details(tmp_path):
+    import pytest
+
+    path = tmp_path / "audit.json"
+    path.write_text(
+        json.dumps(
+            [
+                {
+                    "action": "test",
+                    "entity_type": "finding",
+                    "entity_id": "finding-1",
+                    "details": ["unexpected"],
+                    "timestamp": "2026-01-01T00:00:00+00:00",
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="Unable to load audit log"):
+        AuditLog(path)
