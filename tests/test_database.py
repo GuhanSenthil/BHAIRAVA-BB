@@ -17,7 +17,7 @@ def test_migration_idempotent(tmp_path):
     db1.close()
     db2 = Database(p)
     rows = db2.query_all("SELECT version FROM schema_version")
-    assert len(rows) == 1  # no re-apply
+    assert [row["version"] for row in rows] == [1, 2]  # no re-apply
     db2.close()
 
 

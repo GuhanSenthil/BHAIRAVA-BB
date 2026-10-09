@@ -1,8 +1,8 @@
 """
-BHAIRAVA-BB V7 Intelligence Platform.
+BHAIRAVA-BB V8 Intelligence Platform.
 
-V7 integrates the existing V6 asset, finding, observation and evidence
-systems into a deterministic intelligence layer.
+Persistent, deterministic relationships across assets, observations,
+findings and evidence.
 
 Safety properties:
 - Never expands target scope.
@@ -17,6 +17,7 @@ from .correlation import UnifiedCorrelation, UnifiedCorrelationResult
 from .engine import IntelligenceEngine, IntelligenceResult
 from .evidence import EvidenceRelationship, EvidenceRelationshipStore
 from .relationships import Relationship, RelationshipGraph, RelationshipType
+from .repository import RelationshipRepository
 
 __all__ = [
     "AuditEvent",
@@ -27,6 +28,7 @@ __all__ = [
     "IntelligenceResult",
     "Relationship",
     "RelationshipGraph",
+    "RelationshipRepository",
     "RelationshipType",
     "UnifiedCorrelation",
     "UnifiedCorrelationResult",
