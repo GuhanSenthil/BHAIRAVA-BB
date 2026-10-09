@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import re
+import tempfile
+import threading
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -55,11 +57,14 @@ class AuditLog:
     def __init__(self, path: str | Path | None = None) -> None:
         self.path = Path(path) if path else None
         self._events: list[AuditEvent] = []
+        self._lock = threading.RLock()
+
         if self.path is not None and self.path.is_file():
             try:
                 payload = json.loads(self.path.read_text(encoding="utf-8"))
                 if not isinstance(payload, list):
                     raise ValueError("Audit log must contain a JSON list")
+
                 self._events = [
                     AuditEvent(
                         action=str(item["action"]),
@@ -71,8 +76,16 @@ class AuditLog:
                     for item in payload
                     if isinstance(item, dict)
                 ]
-            except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
-                raise ValueError(f"Unable to load audit log {self.path}: {exc}") from exc
+            except (
+                OSError,
+                json.JSONDecodeError,
+                KeyError,
+                TypeError,
+                ValueError,
+            ) as exc:
+                raise ValueError(
+                    f"Unable to load audit log {self.path}: {exc}"
+                ) from exc
 
     def record(
         self,
@@ -87,26 +100,39 @@ class AuditLog:
             entity_id=entity_id,
             details=_redact(details or {}),
         )
-        self._events.append(event)
+        with self._lock:
+            self._events.append(event)
         return event
 
     def all(self) -> list[AuditEvent]:
-        return list(self._events)
+        with self._lock:
+            return list(self._events)
 
     def save(self) -> Path | None:
         if self.path is None:
             return None
 
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        payload = [asdict(event) for event in self._events]
-        temporary_path = self.path.with_name(self.path.name + ".tmp")
-        try:
-            temporary_path.write_text(
-                json.dumps(payload, indent=2, ensure_ascii=False),
-                encoding="utf-8",
-            )
-            temporary_path.replace(self.path)
-        finally:
-            if temporary_path.exists():
-                temporary_path.unlink()
+        with self._lock:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            payload = [asdict(event) for event in self._events]
+            temporary_path: Path | None = None
+
+            try:
+                with tempfile.NamedTemporaryFile(
+                    mode="w",
+                    encoding="utf-8",
+                    dir=self.path.parent,
+                    prefix=f".{self.path.name}.",
+                    suffix=".tmp",
+                    delete=False,
+                ) as temporary_file:
+                    temporary_path = Path(temporary_file.name)
+                    json.dump(payload, temporary_file, indent=2, ensure_ascii=False)
+                    temporary_file.write("\n")
+
+                temporary_path.replace(self.path)
+            finally:
+                if temporary_path is not None:
+                    temporary_path.unlink(missing_ok=True)
+
         return self.path

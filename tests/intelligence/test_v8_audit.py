@@ -65,3 +65,42 @@ def test_audit_log_loads_saved_events(tmp_path):
     assert second.all()[0].action == "finding.reviewed"
     assert second.all()[0].entity_id == "finding-2"
     assert second.all()[0].details["api_key"] == "[REDACTED]"
+
+
+def test_audit_log_records_events_concurrently():
+    from concurrent.futures import ThreadPoolExecutor
+
+    audit = AuditLog()
+    worker_count = 8
+    events_per_worker = 100
+
+    def record_events(worker_id):
+        for index in range(events_per_worker):
+            audit.record(
+                "test.concurrent",
+                "worker",
+                f"{worker_id}-{index}",
+            )
+
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        list(executor.map(record_events, range(worker_count)))
+
+    events = audit.all()
+    assert len(events) == worker_count * events_per_worker
+    assert len({event.entity_id for event in events}) == len(events)
+
+
+def test_audit_log_saves_concurrently_without_corrupting_json(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+
+    audit = AuditLog(tmp_path / "audit.json")
+    for index in range(100):
+        audit.record("test.concurrent", "finding", f"finding-{index}")
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        results = list(executor.map(lambda _: audit.save(), range(16)))
+
+    assert all(result == audit.path for result in results)
+    payload = json.loads(audit.path.read_text(encoding="utf-8"))
+    assert len(payload) == 100
+    assert not list(tmp_path.glob(".audit.json.*.tmp"))
