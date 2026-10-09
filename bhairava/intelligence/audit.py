@@ -99,8 +99,14 @@ class AuditLog:
 
         self.path.parent.mkdir(parents=True, exist_ok=True)
         payload = [asdict(event) for event in self._events]
-        self.path.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
+        temporary_path = self.path.with_name(self.path.name + ".tmp")
+        try:
+            temporary_path.write_text(
+                json.dumps(payload, indent=2, ensure_ascii=False),
+                encoding="utf-8",
+            )
+            temporary_path.replace(self.path)
+        finally:
+            if temporary_path.exists():
+                temporary_path.unlink()
         return self.path
