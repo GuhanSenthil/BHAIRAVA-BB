@@ -71,9 +71,10 @@ class Database:
                 cur.close()
 
     def close(self) -> None:
-        if self._conn is not None:
-            self._conn.close()
-            self._conn = None
+        with self._lock:
+            if self._conn is not None:
+                self._conn.close()
+                self._conn = None
 
     def execute(self, sql: str, params: tuple = ()) -> None:
         with self.cursor() as c:
