@@ -65,6 +65,9 @@ class AuditLog:
                 if not isinstance(payload, list):
                     raise ValueError("Audit log must contain a JSON list")
 
+                if not all(isinstance(item, dict) for item in payload):
+                    raise ValueError("Every audit log entry must be a JSON object")
+
                 self._events = [
                     AuditEvent(
                         action=str(item["action"]),
@@ -74,7 +77,6 @@ class AuditLog:
                         timestamp=str(item["timestamp"]),
                     )
                     for item in payload
-                    if isinstance(item, dict)
                 ]
             except (
                 OSError,

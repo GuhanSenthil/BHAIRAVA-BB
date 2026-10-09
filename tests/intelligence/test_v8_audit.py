@@ -104,3 +104,26 @@ def test_audit_log_saves_concurrently_without_corrupting_json(tmp_path):
     payload = json.loads(audit.path.read_text(encoding="utf-8"))
     assert len(payload) == 100
     assert not list(tmp_path.glob(".audit.json.*.tmp"))
+
+
+def test_audit_log_rejects_non_object_entries(tmp_path):
+    path = tmp_path / "audit.json"
+    path.write_text('[{"action":"test"}, "invalid-entry"]', encoding="utf-8")
+
+    import pytest
+
+    with pytest.raises(ValueError, match="Unable to load audit log"):
+        AuditLog(path)
+
+
+def test_audit_log_rejects_missing_required_fields(tmp_path):
+    path = tmp_path / "audit.json"
+    path.write_text(
+        '[{"action":"test","entity_type":"finding","entity_id":"finding-1"}]',
+        encoding="utf-8",
+    )
+
+    import pytest
+
+    with pytest.raises(ValueError, match="Unable to load audit log"):
+        AuditLog(path)
