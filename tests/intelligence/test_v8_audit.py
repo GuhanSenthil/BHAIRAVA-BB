@@ -173,3 +173,30 @@ def test_audit_log_rejects_non_object_details(tmp_path):
 
     with pytest.raises(ValueError, match="Unable to load audit log"):
         AuditLog(path)
+
+
+def test_audit_log_record_rejects_non_string_fields():
+    import pytest
+
+    audit = AuditLog()
+
+    with pytest.raises(ValueError, match="action must be a non-empty string"):
+        audit.record(123, "finding", "finding-1")
+
+
+def test_audit_log_record_rejects_empty_required_fields():
+    import pytest
+
+    audit = AuditLog()
+
+    with pytest.raises(ValueError, match="entity_id must be a non-empty string"):
+        audit.record("test", "finding", "  ")
+
+
+def test_audit_log_record_rejects_non_object_details():
+    import pytest
+
+    audit = AuditLog()
+
+    with pytest.raises(ValueError, match="details must be a dictionary"):
+        audit.record("test", "finding", "finding-1", ["unexpected"])

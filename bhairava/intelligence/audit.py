@@ -113,11 +113,24 @@ class AuditLog:
         entity_id: str,
         details: dict[str, Any] | None = None,
     ) -> AuditEvent:
+        for field_name, value in (
+            ("action", action),
+            ("entity_type", entity_type),
+            ("entity_id", entity_id),
+        ):
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(
+                    f"{field_name} must be a non-empty string"
+                )
+
+        if details is not None and not isinstance(details, dict):
+            raise ValueError("details must be a dictionary")
+
         event = AuditEvent(
             action=action,
             entity_type=entity_type,
             entity_id=entity_id,
-            details=_redact(details or {}),
+            details=_redact(details if details is not None else {}),
         )
         with self._lock:
             self._events.append(event)
