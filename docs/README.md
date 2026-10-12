@@ -55,3 +55,7 @@ V6 uses versioned migration infrastructure for controlled database evolution.
 ## Deterministic Planning
 
 V6 supports deterministic dry-run planning before active operations.
+
+## User Manual
+
+The [BHAIRAVA-BB User Manual](USER-MANUAL.md) covers installation, verified CLI commands, scope configuration, reconnaissance, discovery, scanning, finding validation, reporting, pipeline execution, job management, troubleshooting, and official references. It documents operational use and the V1–V7 development period; verify milestone-specific features against the changelog and tagged releases.
