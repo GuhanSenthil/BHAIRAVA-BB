@@ -196,3 +196,12 @@ The V6 implementation has passed the full automated regression suite:
 152 passed
 
 See the complete [V6 Architecture](docs/architecture/BHAIRAVA-BB-V6-ARCHITECTURE.md).
+
+## Documentation
+
+- [Complete User Manual](docs/USER-MANUAL.md) — installation, CLI commands, authorized scope, scanning, validation, reports, pipeline, jobs, and troubleshooting.
+- [Documentation Index](docs/README.md)
+- [Architecture](docs/architecture.md)
+- [Scope Management](docs/scope-management.md)
+- [Troubleshooting](docs/troubleshooting.md)
+- [Changelog](CHANGELOG.md)
